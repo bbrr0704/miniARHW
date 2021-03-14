@@ -121,13 +121,19 @@ function addMarkerHiro(){
 	mesh.position.y	= 0.5
 	markerRoot.add (mesh);
 */
-
+	
+	
 	var ball = new THREE.Mesh (new THREE.SphereGeometry (0.1, 20,20), new THREE.MeshNormalMaterial());
 	markerRoot.add (ball);
 	ball.position.y = 0.1;
 	
 	var grid = new THREE.GridHelper (1, 10, 'red', 'white');
 	markerRoot.add (grid);
+	
+	var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.5),new THREE.MeshNormalMaterial());
+	markerRoot.add (cylinder);
+	
+	
 			
 	return markerRoot;
 }	
@@ -138,6 +144,8 @@ function animate() {
 	
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
+	
+	
 
 	theta += 0.01;
 	markerHiro.children[0].position.set (0.5*Math.sin(theta), 0.1, 0.5*Math.cos(theta));
