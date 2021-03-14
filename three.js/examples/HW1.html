@@ -132,7 +132,7 @@ function addMarkerHiro(){
 	
 	var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.5),new THREE.MeshNormalMaterial());
 	markerRoot.add (cylinder);
-	
+	cylinder.position.y = 0.5;
 	
 			
 	return markerRoot;
@@ -144,6 +144,26 @@ function animate() {
 	
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
+	
+	var time=0;
+	var motion = 1;
+	
+	if(motion = 1)
+		if(time < 25)
+		{
+			markerHiro.children[2].position.set (0, 0.5*Math.cos(0.1*time_up), 0);
+			time += 1;
+		}
+		else motion = 0;
+	else if(motion = 0)
+		if(time > -25)
+		{
+			markerHiro.children[2].position.set (0, 0.5*Math.cos(0.1*time_up), 0);
+			time -= 1;
+		}
+		else motion = 1;
+		
+	
 	
 	
 
