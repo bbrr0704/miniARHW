@@ -24,6 +24,7 @@ var stats;
 var arToolKitSource, arToolKitContext;
 var markerHiro;
 
+var time = 1;
 var theta = 0;
 
 init();
@@ -147,11 +148,10 @@ function animate() {
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
 	
-	var time = 0.1;
 	
-		markerHiro.children[2].position.set ( 0, 1*time , 0); 
+	markerHiro.children[2].position.set ( 0, 0.5*Math.cos(time*0.314) , 0); 
 			
-		time += 0.1;
+	time += 1;
 		
 	
 	
