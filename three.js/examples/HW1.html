@@ -132,7 +132,7 @@ function addMarkerHiro(){
 	var grid = new THREE.GridHelper (1, 10, 'red', 'white');
 	markerRoot.add (grid);
 	
-	var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.5),new THREE.MeshNormalMaterial());
+	var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.5,32),new THREE.MeshNormalMaterial());
 	markerRoot.add (cylinder);
 	cylinder.position.y = 0.5;
 	
