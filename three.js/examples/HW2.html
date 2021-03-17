@@ -1,0 +1,226 @@
+  
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<button id='toggle'>
+toggle
+</button>
+<p id="text" style ="color:blue">
+color
+</p>
+
+<!-- three.js library -->
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
+<script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+<div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a>
+	 - three.js<br>
+Minimal Version
+</div>
+
+<script>
+
+// global variables
+$('#toggle').click (
+
+   function() {
+			rotate = ! rotate;  // toggle
+     
+    }
+);
+
+var camera, scene, renderer;
+var angle = 0 ,omega = 0;
+var group;
+var color;
+var rotate = false;
+
+init();
+animate();
+
+function init() {
+
+	// init renderer
+	renderer	= new THREE.WebGLRenderer({
+		// antialias	: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	// renderer.setPixelRatio( 1/2 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
+
+	// init scene and camera
+	scene	= new THREE.Scene();
+	
+	// Create a BASIC camera
+	  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 20;
+  camera.position.y = 60;
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		sourceType : 'webcam',
+	})
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	})
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
+	
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+		maxDetectionRate: 30,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
+
+	markerHiro = addMarkerHiro();
+	scene.add (markerHiro); 
+	
+}
+	
+function addMarkerHiro(){
+	let markerRoot = new THREE.Group()
+
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+	})
+
+/*
+	// add a torus knot & a transparent box	
+	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
+	var material	= new THREE.MeshNormalMaterial();
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= 0.5
+	markerRoot.add (mesh);
+	
+	mesh = new THREE.Mesh (new THREE.BoxGeometry(1,1,1), 
+				new THREE.MeshNormalMaterial({transparent:true, opacity:0.3}));
+	mesh.position.y	= 0.5
+	markerRoot.add (mesh);
+*/
+    
+	
+	group = new THREE.Group();
+   
+	let geometry0 = new THREE.CircleGeometry( 20, 32, Math.PI/2, 2*Math.PI/3);
+	let material0 = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide} );
+	let circle0 = new THREE.Mesh( geometry0, material0 );
+	group.add( circle0 );  
+
+	let geometry1 = new THREE.CircleGeometry( 20, 32, Math.PI/2 + 2/3*Math.PI, 2*Math.PI/3);
+	 material1 = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+	let circle1 = new THREE.Mesh( geometry1, material1 );
+	group.add( circle1 );  
+   
+	let geometry2 = new THREE.CircleGeometry( 20, 32, Math.PI/2 - 2/3*Math.PI, 2*Math.PI/3);
+	let material2 = new THREE.MeshBasicMaterial( { color: 0x00ffff } );
+	let circle2 = new THREE.Mesh( geometry2, material2 );
+	group.add( circle2 );  
+	
+	markerRoot.add(group);
+
+
+	group.rotation.x = 1.5*Math.PI;
+	group.position.set(0,5,0);
+
+	var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,5),new THREE.MeshBasicMaterial());
+	marketRoot.add(pointer);
+	pointer.position.set(0,8,-16);
+	
+	
+			
+	return markerRoot;
+}	
+
+function animate() {
+	requestAnimationFrame (animate);
+	stats.update();
+	
+	if( arToolkitSource.ready === false )	return
+	arToolkitContext.update( arToolkitSource.domElement )
+	
+	
+  var dt = 0.1;
+  var maxOmega = 6;
+  if (rotate) {
+  	omega = omega + 5*dt;  
+  } else {
+  	omega = omega - .15*dt;    
+  }
+  omega = clamp (omega, 0, maxOmega);
+  
+  angle += omega*dt;
+  
+  group.rotation.z = angle;
+  
+  colorChange();
+	
+	renderer.render (scene, camera);	
+}
+
+function clamp (x, xLo, xHi) {
+	if (x < xLo) return xLo;
+  if (x > xHi) return xHi;
+  else return x;
+}
+
+function colorChange(){
+
+	 if (angle% (2*Math.PI) < (2/3)*Math.PI)
+      	$('#text').css ('color', 'blue'); 
+	 else if(angle% (2*Math.PI) < (4/3)*Math.PI)
+        $('#text').css ('color', 'red');
+   else
+				$('#text').css ('color', 'yellow');
+        
+}
+
+</script></body>
