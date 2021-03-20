@@ -1,18 +1,6 @@
   
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
-<button id='toggle'>
-toggle
-</button>
-<p id="text" style ="color:blue">
-color
-</p>
 
 <!-- three.js library -->
 <script src='../examples/vendor/three.js/build/three.min.js'></script>
@@ -21,6 +9,7 @@ color
 <script src="https://threejs.org/examples/js/controls/OrbitControls.js">
 </script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
 <!-- ar.js -->
 <script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
@@ -30,24 +19,28 @@ color
 <a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a>
 	 - three.js<br>
 Minimal Version
+<br>
+<br>
+&emsp;&emsp;&emsp;&emsp;<button id='toggle'>
+toggle
+</button>
+
+<p id="text" style ="color:blue">
+&emsp;&emsp;&emsp;&emsp;color
+</p>
+
 </div>
 
 <script>
 
 // global variables
-$('#toggle').click (
+var renderer, scene, camera;
+var stats;
+var arToolKitSource, arToolKitContext;
+var markerHiro;
 
-   function() {
-			rotate = ! rotate;  // toggle
-     
-    }
-);
-
-var camera, scene, renderer;
-var angle = 0 ,omega = 0;
-var group;
-var color;
-var rotate = false;
+var time = 0;
+var theta = 0;
 
 init();
 animate();
@@ -146,32 +139,17 @@ function addMarkerHiro(){
 */
     
 	
-	group = new THREE.Group();
-   
-	let geometry0 = new THREE.CircleGeometry( 20, 32, Math.PI/2, 2*Math.PI/3);
-	let material0 = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide} );
-	let circle0 = new THREE.Mesh( geometry0, material0 );
-	group.add( circle0 );  
 
-	let geometry1 = new THREE.CircleGeometry( 20, 32, Math.PI/2 + 2/3*Math.PI, 2*Math.PI/3);
-	 material1 = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-	let circle1 = new THREE.Mesh( geometry1, material1 );
-	group.add( circle1 );  
-   
-	let geometry2 = new THREE.CircleGeometry( 20, 32, Math.PI/2 - 2/3*Math.PI, 2*Math.PI/3);
-	let material2 = new THREE.MeshBasicMaterial( { color: 0x00ffff } );
-	let circle2 = new THREE.Mesh( geometry2, material2 );
-	group.add( circle2 );  
+	var ball = new THREE.Mesh (new THREE.SphereGeometry (0.1, 20,20), new THREE.MeshNormalMaterial());
+	markerRoot.add (ball);
+	ball.position.y = 0.1;
 	
-	markerRoot.add(group);
-
-
-	group.rotation.x = 1.5*Math.PI;
-	group.position.set(0,5,0);
-
-	var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,5),new THREE.MeshBasicMaterial());
-	markerRoot.add(pointer);
-	pointer.position.set(0,8,-16);
+	var grid = new THREE.GridHelper (1, 10, 'red', 'white');
+	markerRoot.add (grid);
+	
+	var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.25,0.5,32),new THREE.MeshNormalMaterial());
+	markerRoot.add (cylinder);
+	cylinder.position.y = 0.5;
 	
 	
 			
@@ -186,39 +164,17 @@ function animate() {
 	arToolkitContext.update( arToolkitSource.domElement )
 	
 	
-  var dt = 0.1;
-  var maxOmega = 6;
-  if (rotate) {
-  	omega = omega + 5*dt;  
-  } else {
-  	omega = omega - .15*dt;    
-  }
-  omega = clamp (omega, 0, maxOmega);
-  
-  angle += omega*dt;
-  
-  markerHiro.children[0].rotation.z = angle;
-  
-  colorChange();
+	markerHiro.children[2].position.set ( 0, 0.5 + 0.5*Math.cos(time*0.314) , 0); 
+			
+	time += 0.05;
+		
+	
+	
+
+	theta += 0.01;
+	markerHiro.children[0].position.set (0.5*Math.sin(theta), 0.1, 0.5*Math.cos(theta));
 	
 	renderer.render (scene, camera);	
-}
-
-function clamp (x, xLo, xHi) {
-	if (x < xLo) return xLo;
-  if (x > xHi) return xHi;
-  else return x;
-}
-
-function colorChange(){
-
-	 if (angle% (2*Math.PI) < (2/3)*Math.PI)
-      	$('#text').css ('color', 'blue'); 
-	 else if(angle% (2*Math.PI) < (4/3)*Math.PI)
-        $('#text').css ('color', 'red');
-   else
-				$('#text').css ('color', 'yellow');
-        
 }
 
 </script></body>
