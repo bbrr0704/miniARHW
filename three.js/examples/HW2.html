@@ -190,9 +190,42 @@ function animate() {
 	arToolkitContext.update( arToolkitSource.domElement )
 	
 
+	var dt = 0.1;
+	var maxOmega = 6;
+	if (rotate) {
+		omega = omega + 5*dt;  
+	} else {
+		omega = omega - .15*dt;    
+	}
+	omega = clamp (omega, 0, maxOmega);
+  
+	angle += omega*dt;
+  
+	group.rotation.z = angle;
+  
+	colorChange();
 
+ 
+}
 	
 	renderer.render (scene, camera);	
+}
+
+function clamp (x, xLo, xHi) {
+	if (x < xLo) return xLo;
+	if (x > xHi) return xHi;
+	else return x;
+}
+
+function colorChange(){
+
+		if (angle% (2*Math.PI) < (2/3)*Math.PI)
+			$('#text').css ('color', 'blue'); 
+		else if(angle% (2*Math.PI) < (4/3)*Math.PI)
+			$('#text').css ('color', 'red');
+		else
+			$('#text').css ('color', 'yellow');
+        
 }
 
 </script></body>
