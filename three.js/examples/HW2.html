@@ -169,11 +169,11 @@ function addMarkerHiro(){
 
 		var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,5),new THREE.MeshBasicMaterial());
 		markerRoot.add(pointer);
-		pointer.position.set(0,0,0);
+		pointer.position.set(0,8,-16);
 
 
-	var grid = new THREE.GridHelper (1, 10, 'red', 'white');
-	markerRoot.add (grid);
+	var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+	markerRoot.add (gridXZ);
 	
 
 	
