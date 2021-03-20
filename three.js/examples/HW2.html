@@ -1,43 +1,49 @@
+  
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="generator"
-    content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <!-- three.js library -->
-    <script src='../examples/vendor/three.js/build/three.min.js'></script>
-    <script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
-    <script src="https://threejs.org/build/three.min.js"></script>
-    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <!-- ar.js -->
-    <script src="../build/ar.js"></script>
-	<script>THREEx.ArToolkitContext.baseURL = '../'</script>
-    <title></title>
-  </head>
-  <body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
-    <div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
-    <a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js
-    <br />Minimal Version
-    <br />
-    <br />
-    <button id='toggle'>toggle</button>
-    <p id="text" style="color:blue">color</p></div>
-    <script>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-$(&#39;#toggle&#39;).click (
+<!-- three.js library -->
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
+<script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
-   function() {
-                        rotate = ! rotate;  // toggle
-     
-    }
-);
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+<div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+
+<br>
+<br>
+&emsp;&emsp;&emsp;&emsp;<button id='toggle'>
+toggle
+</button>
+
+<p id="text" style ="color:blue">
+&emsp;&emsp;&emsp;&emsp;color
+</p>
+
+</div>
+
+<script>
 
 // global variables
 var renderer, scene, camera;
 var stats;
 var arToolKitSource, arToolKitContext;
 var markerHiro;
+
+$('#toggle').click (
+
+   function() {
+			rotate = ! rotate;  // toggle
+     
+    }
+);
 
 var angle = 0 ,omega = 0;
 var group;
@@ -49,98 +55,101 @@ animate();
 
 function init() {
 
-        // init renderer
-        renderer        = new THREE.WebGLRenderer({
-                // antialias    : true,
-                alpha: true
-        });
-        renderer.setClearColor(new THREE.Color(&#39;lightgrey&#39;), 0)
-        // renderer.setPixelRatio( 1/2 );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.domElement.style.position = &#39;absolute&#39;
-        renderer.domElement.style.top = &#39;0px&#39;
-        renderer.domElement.style.left = &#39;0px&#39;
-        document.body.appendChild( renderer.domElement );
+	// init renderer
+	renderer	= new THREE.WebGLRenderer({
+		// antialias	: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	// renderer.setPixelRatio( 1/2 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
 
-        stats = new Stats();
-        document.body.appendChild( stats.dom );
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
 
-        // init scene and camera
-        scene   = new THREE.Scene();
-        
-        // Create a BASIC camera
-        camera = new THREE.Camera();
-        scene.add(camera);
+	// init scene and camera
+	scene	= new THREE.Scene();
+	
+	// Create a BASIC camera
+	camera = new THREE.Camera();
+	scene.add(camera);
 
-        ////////////////////////////////////////////////////////////////////////////////
-        //          handle arToolkitSource
-        ////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
 
-        arToolkitSource = new THREEx.ArToolkitSource({
-                // to read from the webcam 
-                sourceType : &#39;webcam&#39;,
-        })
+	arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		sourceType : 'webcam',
+	})
 
-        arToolkitSource.init(function onReady(){
-                onResize()
-        })
-        
-        // handle resize
-        window.addEventListener(&#39;resize&#39;, function(){
-                onResize()
-        })
-        function onResize(){
-                arToolkitSource.onResize()      
-                arToolkitSource.copySizeTo(renderer.domElement) 
-                if( arToolkitContext.arController !== null ){
-                        arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)        
-                }       
-        }
-        ////////////////////////////////////////////////////////////////////////////////
-        //          initialize arToolkitContext
-        ////////////////////////////////////////////////////////////////////////////////
-        
-        arToolkitContext = new THREEx.ArToolkitContext({
-                cameraParametersUrl: THREEx.ArToolkitContext.baseURL + &#39;../data/data/camera_para.dat&#39;,
-                detectionMode: &#39;mono&#39;,
-                maxDetectionRate: 30,
-                canvasWidth: 80*3,
-                canvasHeight: 60*3,
-        })
-        // initialize it
-        arToolkitContext.init(function onCompleted(){
-                // copy projection matrix to camera
-                camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
-        })
+	arToolkitSource.init(function onReady(){
+		onResize()
+	})
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
+	
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+		maxDetectionRate: 30,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
 
-        markerHiro = addMarkerHiro();
-        scene.add (markerHiro); 
-        
+	markerHiro = addMarkerHiro();
+	scene.add (markerHiro); 
+	
 }
-        
+	
 function addMarkerHiro(){
-        let markerRoot = new THREE.Group()
+	let markerRoot = new THREE.Group()
 
-        var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
-                type : &#39;pattern&#39;,
-                patternUrl : THREEx.ArToolkitContext.baseURL + &#39;../data/data/patt.hiro&#39;
-        })
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+	})
 
 /*
-        // add a torus knot &amp; a transparent box 
-        var geometry    = new THREE.TorusKnotGeometry(0.3,0.1,64,16);
-        var material    = new THREE.MeshNormalMaterial();
-        var mesh        = new THREE.Mesh( geometry, material );
-        mesh.position.y = 0.5
-        markerRoot.add (mesh);
-        
-        mesh = new THREE.Mesh (new THREE.BoxGeometry(1,1,1), 
-                                new THREE.MeshNormalMaterial({transparent:true, opacity:0.3}));
-        mesh.position.y = 0.5
-        markerRoot.add (mesh);
+	// add a torus knot & a transparent box	
+	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
+	var material	= new THREE.MeshNormalMaterial();
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= 0.5
+	markerRoot.add (mesh);
+	
+	mesh = new THREE.Mesh (new THREE.BoxGeometry(1,1,1), 
+				new THREE.MeshNormalMaterial({transparent:true, opacity:0.3}));
+	mesh.position.y	= 0.5
+	markerRoot.add (mesh);
 */
     
-        let geometry0 = new THREE.CircleGeometry( 20, 32, Math.PI/2, 2*Math.PI/3);
+	    group = new THREE.Group();
+		markerRoot.add (group);
+   
+		let geometry0 = new THREE.CircleGeometry( 20, 32, Math.PI/2, 2*Math.PI/3);
 		let material0 = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide} );
 		let circle0 = new THREE.Mesh( geometry0, material0 );
 		group.add( circle0 );  
@@ -157,35 +166,33 @@ function addMarkerHiro(){
 
 		group.rotation.x = 1.5*Math.PI;
 		group.position.set(0,5,0);
-		
-		markerRoot.add (group);
 
 		var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,5),new THREE.MeshBasicMaterial());
-		markerRoot.add (pointer);
+		markerRoot.add(pointer);
 		pointer.position.set(0,8,-16);
 
 
-        
-        var grid = new THREE.GridHelper (1, 10, &#39;red&#39;, &#39;white&#39;);
-        markerRoot.add (grid);
-        
-        
-        
-                        
-        return markerRoot;
-}       
+	var grid = new THREE.GridHelper (1, 10, 'red', 'white');
+	markerRoot.add (grid);
+	
+
+	
+	
+			
+	return markerRoot;
+}	
 
 function animate() {
-        requestAnimationFrame (animate);
-        stats.update();
-        
-        if( arToolkitSource.ready === false )   return
-        arToolkitContext.update( arToolkitSource.domElement )
-        
-        
-        renderer.render (scene, camera);        
+	requestAnimationFrame (animate);
+	stats.update();
+	
+	if( arToolkitSource.ready === false )	return
+	arToolkitContext.update( arToolkitSource.domElement )
+	
+
+
+	
+	renderer.render (scene, camera);	
 }
 
-</script>
-  </body>
-</html>
+</script></body>
