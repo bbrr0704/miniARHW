@@ -177,7 +177,7 @@ function addMarkerHiro(){
 	mesh.position.y	= 0.5
 	markerRoot.add (mesh);
 */
-		button = new Button(-halfW/2,-halfH/2,halfH/3);
+		button = new Button(halfW/2,-halfH/2,halfH/3);
 		sceneHUD.add(button.mesh);
 	
 	
@@ -229,7 +229,7 @@ function animate() {
 	renderer.render (scene, camera);
 	
 	button.mesh.material.visible = markerRoot.visible;
-	renderer.render (sceneHUD, cameraHUD); 	
+	renderer.render (sceneHUD,cameraHUD); 	
 
 	var dt = 0.1;
 	var maxOmega = 6;
