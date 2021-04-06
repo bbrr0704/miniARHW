@@ -223,10 +223,10 @@ function animate() {
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
 	
-	
+	renderer.clear();
 	renderer.render (scene, camera);
 	
-	//button.material.visible = markerRoot.visible;
+	button.material.visible = markerRoot.visible;
 	renderer.render (sceneHUD, cameraHUD); 	
 
 	var dt = 0.1;
