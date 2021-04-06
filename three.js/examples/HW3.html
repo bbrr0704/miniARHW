@@ -69,6 +69,16 @@ class Button{
 
 }
 
+sceneHUD = new THREE.Scene();
+  
+	halfH = 10;
+	halfW = halfH * 1.8;
+  
+	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
+	
+	button = new Button(-halfW/2,-halfH/2,halfH/3);
+	sceneHUD.add(button.mesh);
+
 init();
 animate();
 
@@ -92,15 +102,7 @@ function init() {
 	
 //////////////////////////////////////////////////
 
-	sceneHUD = new THREE.Scene();
-  
-	halfH = 10;
-	halfW = halfH * 1.8;
-  
-	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
 	
-	button = new Button(-halfW/2,-halfH/2,halfH/3);
-	sceneHUD.add(button.mesh);
 
 	// init scene and camera
 	scene	= new THREE.Scene();
@@ -221,10 +223,9 @@ function animate() {
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
 	
-	renderer.clear();
 	
 	renderer.render (scene, camera);
-	rederer.autoClear = false;
+	
 	//button.material.visible = markerRoot.visible;
 	renderer.render (sceneHUD, cameraHUD); 	
 
