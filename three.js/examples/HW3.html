@@ -40,25 +40,26 @@ var rotate = false;
 
 class Button{
 
-	constructor(cx,cy,size,colorString = 'yellow' ,map = null){
-  this.centerX = cx;
-  this.centerY = cy;
-  this.size = size;
-  let material = new THREE.MeshBasicMaterial({color: colorString,
-  transparent : true , opacity : 0.4});
+	constructor (cx,cy,size,colorString = 'yellow' ,map = null)
+	{
+		this.centerX = cx;
+		this.centerY = cy;
+		this.size = size;
+		let material = new THREE.MeshBasicMaterial({color: colorString,
+										transparent : true , opacity : 0.4});
   
-  if(map)
-  	material.map = map;
+		if(map)
+			material.map = map;
     
-	this.mesh = new THREE.Mesh (new THREE.CircleGeometry (size ,36) ,material);
-  this.mesh.position.set(cx,cy,0);
+		this.mesh = new THREE.Mesh (new THREE.CircleGeometry (size ,36) ,material);
+		this.mesh.position.set(cx,cy,0);
   
 
-  }
+	}
   
-  setLocation(lx,ly){
+	setLocation(lx,ly){
  		this.mesh.position.set(lx,ly,0);
-  }
+	}
 
 	d2To(v){
   	return Math.sqrt((v[0]-this.centerX) * (v[0]-this.centerX) 
@@ -68,15 +69,7 @@ class Button{
 
 }
 
-	sceneHUD = new THREE.Scene();
-  
-	halfH = 10;
-	halfW = halfH * 1.8;
-  
-	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
-  
-	button = new Button(-halfW/2,-halfH/2,halfH/3);
-	sceneHUD.add(button.mesh);
+	
 
 init();
 animate();
@@ -100,6 +93,15 @@ function init() {
 	document.body.appendChild( stats.dom );
 	
 
+	sceneHUD = new THREE.Scene();
+  
+	halfH = 10;
+	halfW = halfH * 1.8;
+  
+	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
+  
+	button = new Button(-halfW/2,-halfH/2,halfH/3);
+	sceneHUD.add(button.mesh);
 
 	// init scene and camera
 	scene	= new THREE.Scene();
@@ -213,12 +215,17 @@ function addMarkerHiro(){
 }	
 
 function animate() {
-	requestAnimationFrame (animate);
 	stats.update();
+	requestAnimationFrame (animate);
+	
 	
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
 	
+	renderer.clear();
+	renderer.render (scene, camera);
+	//button.material.visible = markerRoot.visible;
+	renderer.render (sceneHUD, cameraHUD); 	
 
 	var dt = 0.1;
 	var maxOmega = 6;
@@ -237,10 +244,7 @@ function animate() {
 
  
 
-	renderer.clear();
-	renderer.render (scene, camera);
-	button.material.visible = markerRoot.visible;
-	renderer.render (sceneHUD, cameraHUD); 	
+	
 }
 
 function clamp (x, xLo, xHi) {
