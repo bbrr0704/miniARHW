@@ -95,7 +95,6 @@ function init() {
 	halfW = halfH * 1.8;
   
 	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
-	sceneHUD = new(cameraHUD);
   
   button1 = new Button(-halfW/2,-halfH/2,halfH/3);
   sceneHUD.add(button1.mesh);
