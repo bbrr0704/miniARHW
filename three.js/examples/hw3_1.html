@@ -19,9 +19,9 @@
 <p id="press" style="color:black;text-align:center;">
 	did not press
 </p>
-<p id="text" style="color:red;width:30%;text-align:center;margin-right:48%;margin-left:48%;background-color:#888888;">
-</p>
-<p id="text2" style ="color:red">
+
+<br>
+<p id="text2" style ="color:blue">
 color
 </p>
 
@@ -183,7 +183,7 @@ function addMarkerHiro(){
       // do something with the texture
       // Plane with default texture coordinates [0,1]x[0,1]
       console.log('texture loaded...')
-      button = new Button(halfW/2,-halfH/2,halfH/3,'cyan',texture);
+      button = new Button(halfW/2,-halfH/2,halfH/3,'red',texture);
       sceneHUD.add(button.mesh);
 	  pickables.push(button.mesh);
     },
@@ -243,7 +243,19 @@ function animate() {
 	group.rotation.z = angle;
   
 	colorChange();
-	}
+}
+
+function colorChange(){
+
+		if (angle% (2*Math.PI) < (2/3)*Math.PI)
+			$('#text').css ('color', 'blue'); 
+		else if(angle% (2*Math.PI) < (4/3)*Math.PI)
+			$('#text').css ('color', 'red');
+		else
+			$('#text').css ('color', 'yellow');
+        
+}
+
 function onMouseDown(event){
  event.preventDefault();
 
@@ -259,11 +271,11 @@ function onMouseDown(event){
 	 if(intersects.length > 0){
 	    $('#press').css('color','yellow');
 		$('#press').html('<p id="press" style = "color:black;text-align:center;">press</p>');
-		isActive = true;
+		rotate = true;
 	 }else{
 		$('#press').css('color','green');
 		$('#press').html('<p id="press" style = "color:black;text-align:center;">press the wrong place</p>')
-		isActive = false;
+		rotate = false;
 	 }
 	 }
  }
