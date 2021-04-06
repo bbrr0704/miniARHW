@@ -14,10 +14,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.js"> 
 </script>
 
-<br><br><br>
-<p id="phone" style="color: white; text-align: center;">
-	others(red),ios(blue),android(black)
-	</p>
+<br><br>
+
 <p id="press" style="color:black;text-align:center;">
 	did not press
 </p>
@@ -185,9 +183,9 @@ function addMarkerHiro(){
       // do something with the texture
       // Plane with default texture coordinates [0,1]x[0,1]
       console.log('texture loaded...')
-      button1 = new Button(halfW/2,-halfH/2,halfH/3,'cyan',texture);
-      sceneHUD.add(button1.mesh);
-	  pickables.push(button1.mesh);
+      button = new Button(halfW/2,-halfH/2,halfH/3,'cyan',texture);
+      sceneHUD.add(button.mesh);
+	  pickables.push(button.mesh);
     },
   );
 		group = new THREE.Group();
@@ -228,7 +226,7 @@ function animate() {
 	arToolkitContext.update( arToolkitSource.domElement )
 	renderer.clear();
 	renderer.render(scene,camera);
-	button1.mesh.material.visible = markerRoot.visible;
+	button.mesh.material.visible = markerRoot.visible;
 	renderer.render(sceneHUD,cameraHUD);
 	
  	var dt = 0.1;
