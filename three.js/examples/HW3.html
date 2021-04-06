@@ -32,6 +32,7 @@ var renderer, scene, camera;
 var stats;
 var arToolKitSource, arToolKitContext;
 var markerHiro;
+var button,whRatio;
 
 var angle = 0 ,omega = 0;
 var group;
@@ -69,15 +70,7 @@ class Button{
 
 }
 
-sceneHUD = new THREE.Scene();
-  
-	halfH = 10;
-	halfW = halfH * 1.8;
-  
-	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
-	
-	button = new Button(-halfW/2,-halfH/2,halfH/3);
-	sceneHUD.add(button.mesh);
+
 
 init();
 animate();
@@ -100,9 +93,15 @@ function init() {
 	stats = new Stats();
 	document.body.appendChild( stats.dom );
 	
+	whRatio = window.innerWidth/window.innerHeight;
 //////////////////////////////////////////////////
 
-	
+	sceneHUD = new THREE.Scene();
+  
+	halfH = 10;
+	halfW = halfH * whRatio;
+  
+	cameraHUD = new THREE.OrthographicCamera (-halfW,halfW,halfH,-halfH,-10,10);
 
 	// init scene and camera
 	scene	= new THREE.Scene();
@@ -178,7 +177,10 @@ function addMarkerHiro(){
 	mesh.position.y	= 0.5
 	markerRoot.add (mesh);
 */
-    
+		button = new Button(-halfW/2,-halfH/2,halfH/3);
+		sceneHUD.add(button.mesh);
+	
+	
 	    group = new THREE.Group();
 		markerRoot.add (group);
    
