@@ -188,30 +188,36 @@ function addMarkerHiro(){
 	  pickables.push(button.mesh);
     },
   );
-		group = new THREE.Group();
-		markerRoot.add (group);
+  
+		circleA = new THREE.Group();
+		markerRoot.add (circleA);
    
 		let geometry0 = new THREE.CircleGeometry( 0.3, 16, Math.PI/2, 2*Math.PI/3);
 		let material0 = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide} );
 		let circle0 = new THREE.Mesh( geometry0, material0 );
-		group.add( circle0 );  
+		circleA.add( circle0 );  
 
 		let geometry1 = new THREE.CircleGeometry( 0.3, 16, Math.PI/2 + 2/3*Math.PI, 2*Math.PI/3);
 		let material1 = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 		let circle1 = new THREE.Mesh( geometry1, material1 );
-		group.add( circle1 );  
+		circleA.add( circle1 );  
    
 		let geometry2 = new THREE.CircleGeometry( 0.3, 16, Math.PI/2 - 2/3*Math.PI, 2*Math.PI/3);
 		let material2 = new THREE.MeshBasicMaterial( { color: 0x00ffff } );
 		let circle2 = new THREE.Mesh( geometry2, material2 );
-		group.add( circle2 );  
+		circleA.add( circle2 );  
 
-		group.rotation.x = 1.5*Math.PI;
-		group.position.set(0,0.3,0);
-
+		circleA.rotation.x = 1.5*Math.PI;
+		circleA.position.set(0,0.3,0);
+		
+		group = new THREE.Group();
+		group.position.set(0,0.155,0);
+		
 		var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.015,0.015,0.15),new THREE.MeshBasicMaterial({ color: "black" }));
-		markerRoot.add(pointer);
-		pointer.position.set(0,0.32,-0.2);
+		pointer.position.set(0,0.155,-0.075);
+		group.add(pointer);
+		markerRoot.add(group);
+		
 
 
 		var gridXZ = new THREE.GridHelper(1, 10, 'red', 'white');
@@ -240,7 +246,7 @@ function animate() {
   
 	angle += omega*dt;
   
-	group.rotation.z = angle;
+	group.rotation.y = angle;
   
 	colorChange();
 }
@@ -248,11 +254,11 @@ function animate() {
 function colorChange(){
 
 		if (angle% (2*Math.PI) < (2/3)*Math.PI)
-			$('#text').css ('color', 'blue'); 
+			$('#text').css ('color', 'yellow' ); 
 		else if(angle% (2*Math.PI) < (4/3)*Math.PI)
 			$('#text').css ('color', 'red');
 		else
-			$('#text').css ('color', 'yellow');
+			$('#text').css ('color', 'blue');
         
 }
 
