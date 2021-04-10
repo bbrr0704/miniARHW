@@ -214,9 +214,10 @@ function addMarkerHiro(){
 		group.position.set(0,0.32,0);
 		
 		var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.015,0.015,0.15),new THREE.MeshBasicMaterial({ color: "black" }));
+		pointer.position.set(0,0.32,-0.075);
 		group.add(pointer);
 		markerRoot.add(group);
-		pointer.position.set(0,0.32,-0.075);
+		
 
 
 		var gridXZ = new THREE.GridHelper(1, 10, 'red', 'white');
