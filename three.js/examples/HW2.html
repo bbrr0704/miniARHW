@@ -145,37 +145,34 @@ function addMarkerHiro(){
  markerRoot.add (mesh);
  */
  //////////////////////
-  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
-  scene.add(gridXZ);
-
-group = new THREE.Group();
-scene.add (group);  
-let geometry3 = new THREE.ConeGeometry(5/16.8,10/16.8,8);
-let material3 = new THREE.MeshBasicMaterial({color:'black'});
-let pointer = new THREE.Mesh(geometry3,material3);
-pointer.position.set(0,0,-18/16.5);
-pointer.rotation.x=0.5*Math.PI;
-scene.add(pointer);
-let geometry0 = new THREE.CircleGeometry( 18/16.5, 32, Math.PI/2, 
-2*Math.PI/3);
-let material0 = new THREE.MeshBasicMaterial( { color: 'green', side: THREE.DoubleSide} );
-let circle0 = new THREE.Mesh( geometry0, material0 );
-group.add( circle0 );  
-
-let geometry1 = new THREE.CircleGeometry( 18/16.5, 32, Math.PI/2 + 2/3*Math.PI, 
-2*Math.PI/3);
-let material1 = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-let circle1 = new THREE.Mesh( geometry1, material1 );
-group.add( circle1 );  
+  group = new THREE.Group();
+		markerRoot.add (group);
    
-let geometry2 = new THREE.CircleGeometry( 18/16.5, 32, Math.PI/2 - 2/3*Math.PI, 
-2*Math.PI/3);
-let material2 = new THREE.MeshBasicMaterial( { color: 0x00ffff } );
-let circle2 = new THREE.Mesh( geometry2, material2 );
-group.add( circle2 );  
-group.rotation.x=1.5*Math.PI;
-    markerRoot.add(group);
- markerRoot.add(pointer);
+		let geometry0 = new THREE.CircleGeometry( 0.3, 16, Math.PI/2, 2*Math.PI/3);
+		let material0 = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide} );
+		let circle0 = new THREE.Mesh( geometry0, material0 );
+		group.add( circle0 );  
+
+		let geometry1 = new THREE.CircleGeometry( 0.3, 16, Math.PI/2 + 2/3*Math.PI, 2*Math.PI/3);
+		let material1 = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+		let circle1 = new THREE.Mesh( geometry1, material1 );
+		group.add( circle1 );  
+   
+		let geometry2 = new THREE.CircleGeometry( 0.3, 16, Math.PI/2 - 2/3*Math.PI, 2*Math.PI/3);
+		let material2 = new THREE.MeshBasicMaterial( { color: 0x00ffff } );
+		let circle2 = new THREE.Mesh( geometry2, material2 );
+		group.add( circle2 );  
+
+		group.rotation.x = 1.5*Math.PI;
+		group.position.set(0,0.3,0);
+
+		var pointer = new THREE.Mesh(new THREE.BoxGeometry(0.015,0.015,0.15),new THREE.MeshBasicMaterial());
+		markerRoot.add(pointer);
+		pointer.position.set(0,0.32,-0.2);
+
+
+	var gridXZ = new THREE.GridHelper(1, 10, 'red', 'white');
+	markerRoot.add (gridXZ);
  return markerRoot;
 } 
 
@@ -186,27 +183,20 @@ function animate() {
  if( arToolkitSource.ready === false ) return
  arToolkitContext.update( arToolkitSource.domElement )
  
- var dt= 0.2 ;
-  var maxOmega = 5;
+ var dt= 0.1 ;
+  var maxOmega = 6;
   
   if(isActive){
-   omega = omega + 0.3*dt;
+   omega = omega + 5*dt;
   }else{
    omega = omega - 0.15*dt;
   }
-  omega=clamp(omega, 0,maxOmega);
-  angle+=omega*dt;
-  group.rotation.z=angle;
-  if((angle%(2*Math.PI))<(2/3*Math.PI))
-  {
-   $('#text').css ('color', 'blue'); 
-  }
-  else if((2/3*Math.PI<(angle%(2*Math.PI)))&&((angle%(2*Math.PI))<4/3*Math.PI)){
-   $('#text').css ('color', 'red');
-}
-  else if(4/3*Math.PI<(angle%(2*Math.PI))){
-   $('#text').css ('color', 'yellow');
- }
+  omega = clamp (omega, 0, maxOmega);
+  
+	angle += omega*dt;
+  
+	group.rotation.z = angle;
+  colorChange();
 
  renderer.render(scene,camera);
  }
@@ -215,5 +205,16 @@ function clamp (x, xLo, xHi) {
  if (x < xLo) return xLo;
   if (x > xHi) return xHi;
   else return x;
+}
+
+function colorChange(){
+
+		if (angle% (2*Math.PI) < (2/3)*Math.PI)
+			$('#text').css ('color', 'blue'); 
+		else if(angle% (2*Math.PI) < (4/3)*Math.PI)
+			$('#text').css ('color', 'red');
+		else
+			$('#text').css ('color', 'yellow');
+        
 }
 </script></body>
