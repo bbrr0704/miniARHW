@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+
+
+
+</style>
+</head>
+
+<body>
+
+<div id="info">Cannon Firing</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+
+<script>
+
+var keyboard = new KeyboardState();
+
+var up = false,down = false,right = false,left = false,space = false;
+
+var aim_xz = -Math.PI/6 ,aim_y = -Math.PI/6;
+
+var camera, scene, renderer;
+var cannon;
+var clock;
+var ball;
+var pos, vel, force;
+
+init();
+animate();
+
+function init() {
+
+  scene = new THREE.Scene();
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  document.body.appendChild(renderer.domElement);
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.set (0,150,150);
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+  scene.add(gridXZ);
+
+  ///////////////////////////////////////////////////////////
+
+	cannon = makeCannon();
+	scene.add (cannon);
+  ball = new THREE.Mesh (new THREE.SphereGeometry(2,8,8), new THREE.MeshPhongMaterial());
+  scene.add (ball);
+  
+  clock = new THREE.Clock();
+  
+  //// settings //////////////////////
+  let barrel = cannon.children[1]
+  barrel.rotation.z = -Math.PI/6; // barrel angle
+  cannon.rotation.y = -Math.PI/6;
+
+}
+
+function makeCannon() {
+	let cannon = new THREE.Group();
+  let body = new THREE.Mesh (new THREE.SphereGeometry(
+    10,20,20, Math.PI+Math.PI*0.1,Math.PI*1.8,0,Math.PI/2), new THREE.MeshNormalMaterial());
+  let barrelPart = new THREE.Group();
+  let barrel = new THREE.Mesh (new THREE.CylinderGeometry(2,2,20,18), new THREE.MeshNormalMaterial());
+  barrelPart.add (barrel);
+  barrel.position.y = 10;
+ 
+	cannon.add (body, barrelPart);
+  return cannon;
+}
+function computeInitPosVel() {
+  let barrel = cannon.children[1];
+  const SPEED = 25;
+	vel = barrel.localToWorld (new THREE.Vector3(0,20,0)).sub (
+  barrel.localToWorld (new THREE.Vector3(0,0,0))).setLength (SPEED);
+	pos = barrel.localToWorld (new THREE.Vector3(0,22,0));
+	force = new THREE.Vector3(0,-10,0);
+}
+
+function animate() {
+  
+  requestAnimationFrame(animate);
+  render();
+  
+  keyboard.update();
+
+  if (keyboard.down('space'))  space = true;
+  
+  
+  if (keyboard.down('up'))	up = true;
+  if (keyboard.up('up'))	up = false;
+  
+  if (keyboard.down('down'))	down = true;
+  if (keyboard.up('down'))	down = false;
+  
+  if (keyboard.down('left'))	left = true;
+  if (keyboard.up('left'))	left = false;
+  
+  if (keyboard.down('right'))	right = true;
+  if (keyboard.up('right'))	right = false;
+  
+  if(up)
+  {
+  	if(aim_y <= -Math.PI/10)aim_y +=Math.PI/360;
+    
+    cannon.children[1].rotation.z = aim_y;
+  }
+  
+  if(down)
+  {
+  	if(aim_y >= -Math.PI/2.5)aim_y -=Math.PI/360;
+    
+    cannon.children[1].rotation.z = aim_y;
+  }
+  
+  if(left)
+  {
+  	aim_xz +=Math.PI/180;
+    
+    cannon.rotation.y = aim_xz;
+  }
+  
+  if(right)
+  {
+  	aim_xz -=Math.PI/180;
+    
+    cannon.rotation.y = aim_xz;
+  }
+  
+  
+  
+  
+  
+  
+  if(space)
+  {
+		if (pos === undefined) {
+  		computeInitPosVel();
+  		return;
+ 	 	}
+ 	 	if (pos.y < 0)
+  	return;
+  
+		let dt = clock.getDelta();
+
+		// Euler's method
+  	vel.add (force.clone().multiplyScalar(dt));
+ 		pos.add (vel.clone().multiplyScalar(dt));
+  	ball.position.copy (pos);
+  
+  }
+  
+  
+  
+}
+
+function render() {
+
+  renderer.render(scene, camera);
+
+}
+
+</script>
+</body>
+
+</html>
