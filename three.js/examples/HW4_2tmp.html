@@ -224,7 +224,7 @@ function animate() {
 	let angle = point.angleTo (localCamera);
 	let axis = new THREE.Vector3();
 	axis.crossVectors(point, localCamera).normalize(); // normalization is IMPORTANT!
-	aimGroup.quaternion.setFromAxisAngle (axis, angle
+	aimGroup.quaternion.setFromAxisAngle (axis, angle);
  	
 }
 
