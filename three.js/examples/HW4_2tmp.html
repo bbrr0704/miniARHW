@@ -28,10 +28,6 @@ var renderer, scene, camera,sceneHUD,cameraHUD,whRatio;
 var stats;
 var arToolKitSource, arToolKitContext;
 var markerHiro;
-var pos = 0;
-var angle = 0 ,omega = 0;;
-var rotate = false;
-var cubeSpin = false;
 
 var button;
 var pickables= [];
@@ -72,7 +68,7 @@ function init() {
 	renderer.domElement.style.position = 'absolute'
 	renderer.domElement.style.top = '0px'
 	renderer.domElement.style.left = '0px'
-	//document.body.appendChild( renderer.domElement );
+	document.body.appendChild( renderer.domElement );
     
 	whRatio = window.innerWidth/window.innerHeight;
 	
