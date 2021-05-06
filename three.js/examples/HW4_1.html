@@ -110,7 +110,7 @@ function makeCannon() {
 }
 function computeInitPosVel() {
   let barrel = cannon.children[1];
-  const SPEED = 25;
+  const SPEED = 18;
 	vel = barrel.localToWorld (new THREE.Vector3(0,20,0)).sub (
   barrel.localToWorld (new THREE.Vector3(0,0,0))).setLength (SPEED);
 	pos = barrel.localToWorld (new THREE.Vector3(0,22,0));
