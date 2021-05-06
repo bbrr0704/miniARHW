@@ -36,23 +36,31 @@ body {
 
 <script>
 
+
+
 var keyboard = new KeyboardState();
 
 var up = false,down = false,right = false,left = false,space = false;
 
-var aim_xz = -Math.PI/6 ,aim_y = -Math.PI/6;
+var aim_xz = 0 ,aim_y = -Math.PI/6 , aim_y_t = -Math.PI/2.5;
 
 var camera, scene, renderer;
 var cannon;
 var clock;
 var ball;
-var pos, vel, force;
+var pos, vel, force, ori;
+var at,bt,ct;
+var parabola;
 
 init();
 animate();
 
 function init() {
 
+ renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  
   scene = new THREE.Scene();
 
   renderer = new THREE.WebGLRenderer();
@@ -65,6 +73,10 @@ function init() {
   let controls = new THREE.OrbitControls(camera, renderer.domElement);
   var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
   scene.add(gridXZ);
+  
+  ///////////////////////////////////////////////////////////
+  
+  
 
   ///////////////////////////////////////////////////////////
 
@@ -73,17 +85,19 @@ function init() {
   ball = new THREE.Mesh (new THREE.SphereGeometry(2,8,8), new THREE.MeshPhongMaterial());
   scene.add (ball);
   
+  
   clock = new THREE.Clock();
   
   //// settings //////////////////////
   let barrel = cannon.children[1]
-  barrel.rotation.z = -Math.PI/6; // barrel angle
-  cannon.rotation.y = -Math.PI/6;
+  barrel.rotation.z = -Math.PI/2.5; // barrel angle
+  cannon.rotation.y = 0;
 
 }
 
 function makeCannon() {
 	let cannon = new THREE.Group();
+	
   let body = new THREE.Mesh (new THREE.SphereGeometry(
     10,20,20, Math.PI+Math.PI*0.1,Math.PI*1.8,0,Math.PI/2), new THREE.MeshNormalMaterial());
   let barrelPart = new THREE.Group();
@@ -91,7 +105,7 @@ function makeCannon() {
   barrelPart.add (barrel);
   barrel.position.y = 10;
  
-	cannon.add (body, barrelPart);
+	cannon.add (body, barrelPart , parabola);
   return cannon;
 }
 function computeInitPosVel() {
@@ -101,6 +115,7 @@ function computeInitPosVel() {
   barrel.localToWorld (new THREE.Vector3(0,0,0))).setLength (SPEED);
 	pos = barrel.localToWorld (new THREE.Vector3(0,22,0));
 	force = new THREE.Vector3(0,-10,0);
+	ori = new THREE.Vector3(0,0,0);
 }
 
 function animate() {
@@ -125,18 +140,33 @@ function animate() {
   if (keyboard.down('right'))	right = true;
   if (keyboard.up('right'))	right = false;
   
-  if(up)
-  {
-  	if(aim_y <= -Math.PI/10)aim_y +=Math.PI/360;
-    
-    cannon.children[1].rotation.z = aim_y;
-  }
+  
+  var tmpaim = aim_y;
+  
+	
+	
   
   if(down)
   {
-  	if(aim_y >= -Math.PI/2.5)aim_y -=Math.PI/360;
+  	if(aim_y <= -Math.PI/10)
+	{
+		aim_y +=Math.PI/360;
+		aim_y_t -=Math.PI/360;
+	}
+	
     
-    cannon.children[1].rotation.z = aim_y;
+    cannon.children[1].rotation.z = aim_y_t;
+  }
+  
+  if(up)
+  {
+  	if(aim_y >= -Math.PI/2.5)
+	{
+		aim_y -=Math.PI/360;
+		aim_y_t +=Math.PI/360;
+	}
+    
+    cannon.children[1].rotation.z = aim_y_t;
   }
   
   if(left)
@@ -153,7 +183,22 @@ function animate() {
     cannon.rotation.y = aim_xz;
   }
   
+	
   
+	scene.remove(parabola);
+	
+	let theta = -aim_y;
+  
+	at = -(10 /( (2*25*25)*Math.pow( Math.cos(theta),2) ) );
+	bt = ( 25*25*Math.cos(aim_y)*Math.sin(theta)) / 10;
+	ct = ( 25*25*Math.pow(Math.sin(theta),2) )  / (2*10);
+  
+  
+	makeParabola (at,bt,ct);
+	
+	scene.add(parabola);
+	cannon.add(parabola);
+	
   
   
   
@@ -164,9 +209,14 @@ function animate() {
   		computeInitPosVel();
   		return;
  	 	}
- 	 	if (pos.y < 0)
-  	return;
-  
+ 	 	if (pos.y < 2)
+		{
+		  space = false;
+		  pos = undefined;
+		  
+			ball.position.copy (ori);
+			return;
+		}
 		let dt = clock.getDelta();
 
 		// Euler's method
@@ -177,6 +227,28 @@ function animate() {
   }
   
   
+  
+}
+
+function makeParabola (a, b, c) {
+
+  
+
+	let xRange = Math.sqrt(-a*c)*2/a;
+  const N = 20;
+  let dx = xRange/20;
+  
+  let points = [];
+  let x0 = b - xRange/2;
+  for (let i = 0; i <= N; i++) {
+  	xi = x0 + i*dx;
+    yi = a*(xi-b)*(xi-b) + c;
+    points.push (new THREE.Vector3(xi,yi,0));
+  }
+  
+  let geometry = new THREE.BufferGeometry().setFromPoints(points);
+  parabola = new THREE.Line (geometry, new THREE.LineDashedMaterial({color:'cyan'}));
+  parabola.computeLineDistances(); // required for LineDashedMaterial
   
 }
 

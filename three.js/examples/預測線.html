@@ -1,0 +1,137 @@
+<html>
+
+<head>
+<style>
+
+
+
+#info {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+<div id="info">Projectile
+</div>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+
+<script>
+
+var camera, scene, renderer;
+var ball, x0, dx;
+var i = 1;
+var nowPos, prePos;
+
+init();
+animate();
+
+function init() {
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+  document.body.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+  camera = new THREE.OrthographicCamera(-50, 50, 50, -50, -10, 100);
+  camera.position.z = 10;
+  //let controls = new THREE.OrbitControls (camera, renderer.domElement);
+
+  /////////////////////////////////////////////////////////  
+  let grid = new THREE.GridHelper (100,10, 'red','white');
+  scene.add (grid);
+  grid.rotation.x = Math.PI/2;
+
+  window.addEventListener('resize', onWindowResize, false);
+  
+  scene.add (makeParabola (-.125, 4, 30));
+  
+  ///// two end points
+  // x0 = b - sqrt(-c/a)
+  // x1 = b + sqrt(-c/a)
+  // y = a(x-b)^2 + c
+	x0 = 4 - Math.sqrt(30/.125);
+  dx = 2*Math.sqrt(30/.125);
+  
+  //ball = new THREE.Mesh (new THREE.CylinderGeometry(.52,2,5,20), new THREE.MeshNormalMaterial());
+  //scene.add (ball);
+  nowPos = new THREE.Vector3();
+  prePos = new THREE.Vector3();
+  prePos.set (x0,0,0);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function makeParabola (a, b, c) {
+	let xRange = Math.sqrt(-a*c)*2/a;
+  const N = 20;
+  let dx = xRange/20;
+  
+  let points = [];
+  let x0 = b - xRange/2;
+  for (let i = 0; i <= N; i++) {
+  	xi = x0 + i*dx;
+    yi = a*(xi-b)*(xi-b) + c;
+    points.push (new THREE.Vector3(xi,yi,0));
+  }
+  
+  let geometry = new THREE.BufferGeometry().setFromPoints(points);
+  let parabola = new THREE.Line (geometry, new THREE.LineDashedMaterial({color:'cyan'}));
+  parabola.computeLineDistances(); // required for LineDashedMaterial
+  return parabola;
+  
+}
+function animate() {
+  requestAnimationFrame(animate);
+  render();
+
+/*	let xi = x0 + i*dx/100;
+  let yi = -.125*(xi-4)*(xi-4)+30;
+	if (i > 100) {
+  	console.log (yi)
+    return;
+  }*/
+  prePos.copy (nowPos);
+  nowPos.set (xi, yi, 0);
+  //ball.position.copy (nowPos);
+  //ball.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), nowPos.clone().sub(prePos).normalize());
+  
+  ++i;
+  	
+}
+
+function render() {
+  renderer.render(scene, camera);
+}
+
+
+</script>
+
+</body>
+
+</html>
