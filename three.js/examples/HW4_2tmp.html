@@ -22,7 +22,8 @@
 <script>
 
 // global variables
-var renderer, scene, camera;
+var renderer, scene, camera, sceneHUD, cameraHUD, whRatio;
+var stats;
 var arToolKitSource, arToolKitContext;
 
 var markerHiro;
@@ -30,6 +31,30 @@ var aimGroup;
 
 var _iOSDevice;
 
+var button;
+var pickables= [];
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
+
+
+class Button{
+    constructor(cx, cy, size, colorString = 'yellow',map=null){
+    this.centerX= cx;
+    this.centerY= cy;
+    this.size = size;
+    let material =new THREE.MeshBasicMaterial({color:colorString,transparent:true,opacity:0.7});
+    if(map)
+       material.map=map;
+       this.mesh=new THREE.Mesh(new THREE.CircleGeometry(size,10),material);
+       this.mesh.position.set(cx,cy,0);
+    }
+    setLocation(lx,ly){
+    this.mesh.position.set(lx,ly,0);
+    }
+    d2To(v){
+    return Math.sqrt((v[0]-this.centerX)*(v[0]-this.centerX)+(v[1]-this.centerY)*(v[1]-this.centerY));
+    }
+}
 
 init();
 animate();
@@ -46,6 +71,7 @@ function init() {
 		// antialias	: true,
 		alpha: true
 	});
+	renderer.autoClear = false;
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
 	// renderer.setPixelRatio( 1/2 );
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -54,6 +80,10 @@ function init() {
 	renderer.domElement.style.left = '0px'
 	document.body.appendChild( renderer.domElement );
 
+	whRatio = window.innerWidth/window.innerHeight;
+	
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
 	
 	// init scene and camera
 	scene	= new THREE.Scene();
@@ -65,6 +95,11 @@ function init() {
 	// Create a camera
 	camera = new THREE.Camera();
 	scene.add(camera);
+	sceneHUD =new THREE.Scene();
+	
+	halfH = 10;
+	halfW = halfH*whRatio;
+	cameraHUD = new THREE.OrthographicCamera(-halfW,halfW, halfH,-halfH,-10,10);
 
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
@@ -119,17 +154,13 @@ function init() {
 	scene.add (markerHiro); 
 		
 	// to trigger explosion
-	window.addEventListener ('mousedown', doMouseDown, false);
+	document.addEventListener('touchstart',onMouseDown,false);
 	// initialize explosion sprite
 	initSprite(markerHiro);
 		
 }
 
-function doMouseDown (e) {
-	if (e.button === 0) {
-		setTimeout (spriteAnimate, 0);
-	}
-}
+
 
 function addMarkerHiro () {
 	let markerRootHiro = new THREE.Group();
@@ -158,6 +189,24 @@ function addMarkerHiro () {
 	markerRootHiro.add (aimGroup, origin);
 	
 	
+	loader.load(
+    // resource URL
+    'https://i.imgur.com/YPLd0tH.png',
+    // Function when resource is loaded
+    function(texture) {
+      // do something with the texture
+      // Plane with default texture coordinates [0,1]x[0,1]
+      console.log('texture loaded...')
+      button = new Button(halfW/2,-halfH/2,halfH/3,'red',texture);
+      sceneHUD.add(button.mesh);
+	  pickables.push(button.mesh);
+    },
+  );
+	
+	
+	
+	
+	
 	
 	return markerRootHiro;
 }
@@ -169,10 +218,10 @@ function animate() {
   if( arToolkitSource.ready === false )	return
   arToolkitContext.update( arToolkitSource.domElement )
   
-  renderer.render (scene, camera);
-  //let msg = baseS + ', ' + baseT;
-  //console.log (msg);
-		
+	renderer.clear();
+	renderer.render(scene,camera);
+	button.mesh.material.visible = markerRoot.visible;
+	renderer.render(sceneHUD,cameraHUD);
 		
 		/////////////////////////////////////////////////////////////////////////
 	let localCamera = markerHiro.worldToLocal (new THREE.Vector3(0,0,0))
@@ -189,6 +238,25 @@ function animate() {
 	
 	//	aimGroup.lookAt (new THREE.Vector3(0,0,0));  // does NOT work
 }
+
+function onMouseDown(event){
+ event.preventDefault();
+
+ var touches = event.changedTouches;
+ for( var i = 0; i < touches.length;i++ ){
+	 mouse.x = (touches[i].pageX/window.innerWidth)*2-1;
+	 mouse.y = -(touches[i].pageY/window.innerHeight)*2+1;
+	 
+	 raycaster.setFromCamera(mouse,cameraHUD);
+	 
+	 var intersects = raycaster.intersectObjects(pickables);
+	 
+	 if(intersects.length > 0)
+		setTimeout (spriteAnimate, 0);
+	 
+	 }
+ }
+
 
 </script>
 </body>
