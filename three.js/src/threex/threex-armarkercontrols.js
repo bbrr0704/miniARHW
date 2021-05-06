@@ -1,7 +1,6 @@
-var ARjs = ARjs || {}
 var THREEx = THREEx || {}
 
-ARjs.MarkerControls = THREEx.ArMarkerControls = function(context, object3d, parameters){
+THREEx.ArMarkerControls = function(context, object3d, parameters){
 	var _this = this
 
 	THREEx.ArBaseControls.call(this, object3d)
@@ -21,14 +20,6 @@ ARjs.MarkerControls = THREEx.ArMarkerControls = function(context, object3d, para
 		changeMatrixMode : 'modelViewMatrix',
 		// minimal confidence in the marke recognition - between [0, 1] - default to 1
 		minConfidence: 0.6,
-		// turn on/off camera smoothing
-		smooth: false,
-		// number of matrices to smooth tracking over, more = smoother but slower follow
-		smoothCount: 5,
-		// distance tolerance for smoothing, if smoothThreshold # of matrices are under tolerance, tracking will stay still
-		smoothTolerance: 0.01,
-		// threshold for smoothing, will keep still unless enough matrices are over tolerance
-		smoothThreshold: 2,
 	}
 
 	// sanity check
@@ -42,7 +33,7 @@ ARjs.MarkerControls = THREEx.ArMarkerControls = function(context, object3d, para
 	this.object3d = object3d
 	this.object3d.matrixAutoUpdate = false;
 	this.object3d.visible = false
-
+	
 	//////////////////////////////////////////////////////////////////////////////
 	//		setParameters
 	//////////////////////////////////////////////////////////////////////////////
@@ -68,10 +59,6 @@ ARjs.MarkerControls = THREEx.ArMarkerControls = function(context, object3d, para
 		}
 	}
 
-	if (this.parameters.smooth) {
-		this.smoothMatrices = []; // last DEBOUNCE_COUNT modelViewMatrix
-	}
-
 	//////////////////////////////////////////////////////////////////////////////
 	//		Code Separator
 	//////////////////////////////////////////////////////////////////////////////
@@ -90,10 +77,10 @@ ARjs.MarkerControls = THREEx.ArMarkerControls = function(context, object3d, para
 	}else console.assert(false)
 }
 
-ARjs.MarkerControls.prototype = Object.create( THREEx.ArBaseControls.prototype );
-ARjs.MarkerControls.prototype.constructor = THREEx.ArMarkerControls;
+THREEx.ArMarkerControls.prototype = Object.create( THREEx.ArBaseControls.prototype );
+THREEx.ArMarkerControls.prototype.constructor = THREEx.ArMarkerControls;
 
-ARjs.MarkerControls.prototype.dispose = function(){
+THREEx.ArMarkerControls.prototype.dispose = function(){
 	this.context.removeMarker(this)
 
 	// TODO remove the event listener if needed
@@ -105,10 +92,10 @@ ARjs.MarkerControls.prototype.dispose = function(){
 //////////////////////////////////////////////////////////////////////////////
 
 /**
- * When you actually got a new modelViewMatrix, you need to perfom a whole bunch
+ * When you actually got a new modelViewMatrix, you need to perfom a whole bunch 
  * of things. it is done here.
  */
-ARjs.MarkerControls.prototype.updateWithModelViewMatrix = function(modelViewMatrix){
+THREEx.ArMarkerControls.prototype.updateWithModelViewMatrix = function(modelViewMatrix){
 	var markerObject3D = this.object3d;
 
 	// mark object as visible
@@ -118,8 +105,8 @@ ARjs.MarkerControls.prototype.updateWithModelViewMatrix = function(modelViewMatr
 		// apply context._axisTransformMatrix - change artoolkit axis to match usual webgl one
 		var tmpMatrix = new THREE.Matrix4().copy(this.context._artoolkitProjectionAxisTransformMatrix)
 		tmpMatrix.multiply(modelViewMatrix)
-
-		modelViewMatrix.copy(tmpMatrix)
+		
+		modelViewMatrix.copy(tmpMatrix)		
 	}else if( this.context.parameters.trackingBackend === 'aruco' ){
 		// ...
 	}else if( this.context.parameters.trackingBackend === 'tango' ){
@@ -134,49 +121,9 @@ ARjs.MarkerControls.prototype.updateWithModelViewMatrix = function(modelViewMatr
 		modelViewMatrix.multiply(markerAxisTransformMatrix)
 	}
 
-	var renderReqd = false;
-
 	// change markerObject3D.matrix based on parameters.changeMatrixMode
 	if( this.parameters.changeMatrixMode === 'modelViewMatrix' ){
-		if (this.parameters.smooth) {
-			var sum,
-					i, j,
-					averages, // average values for matrix over last smoothCount
-					exceedsAverageTolerance = 0;
-
-			this.smoothMatrices.push(modelViewMatrix.elements.slice()); // add latest
-
-			if (this.smoothMatrices.length < (this.parameters.smoothCount + 1)) {
-				markerObject3D.matrix.copy(modelViewMatrix); // not enough for average
-			} else {
-				this.smoothMatrices.shift(); // remove oldest entry
-				averages = [];
-
-				for (i in modelViewMatrix.elements) { // loop over entries in matrix
-					sum = 0;
-					for (j in this.smoothMatrices) { // calculate average for this entry
-						sum += this.smoothMatrices[j][i];
-					}
-					averages[i] = sum / this.parameters.smoothCount;
-					// check how many elements vary from the average by at least AVERAGE_MATRIX_TOLERANCE
-					if (Math.abs(averages[i] - modelViewMatrix.elements[i]) >= this.parameters.smoothTolerance) {
-						exceedsAverageTolerance++;
-					}
-				}
-
-				// if moving (i.e. at least AVERAGE_MATRIX_THRESHOLD entries are over AVERAGE_MATRIX_TOLERANCE)
-				if (exceedsAverageTolerance >= this.parameters.smoothThreshold) {
-					// then update matrix values to average, otherwise, don't render to minimize jitter
-					for (i in modelViewMatrix.elements) {
-						modelViewMatrix.elements[i] = averages[i];
-					}
-					markerObject3D.matrix.copy(modelViewMatrix);
-					renderReqd = true; // render required in animation loop
-				}
-			}
-		} else {
-			markerObject3D.matrix.copy(modelViewMatrix)
-		}
+		markerObject3D.matrix.copy(modelViewMatrix)
 	}else if( this.parameters.changeMatrixMode === 'cameraTransformMatrix' ){
 		markerObject3D.matrix.getInverse( modelViewMatrix )
 	}else {
@@ -188,8 +135,6 @@ ARjs.MarkerControls.prototype.updateWithModelViewMatrix = function(modelViewMatr
 
 	// dispatchEvent
 	this.dispatchEvent( { type: 'markerFound' } );
-
-	return renderReqd;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -197,11 +142,11 @@ ARjs.MarkerControls.prototype.updateWithModelViewMatrix = function(modelViewMatr
 //////////////////////////////////////////////////////////////////////////////
 
 /**
- * provide a name for a marker
+ * provide a name for a marker 
  * - silly heuristic for now
  * - should be improved
  */
-ARjs.MarkerControls.prototype.name = function(){
+THREEx.ArMarkerControls.prototype.name = function(){
 	var name = ''
 	name += this.parameters.type;
 	if( this.parameters.type === 'pattern' ){
@@ -219,7 +164,7 @@ ARjs.MarkerControls.prototype.name = function(){
 //////////////////////////////////////////////////////////////////////////////
 //		init for Artoolkit
 //////////////////////////////////////////////////////////////////////////////
-ARjs.MarkerControls.prototype._initArtoolkit = function(){
+THREEx.ArMarkerControls.prototype._initArtoolkit = function(){
 	var _this = this
 
 	var artoolkitMarkerId = null
@@ -236,7 +181,7 @@ ARjs.MarkerControls.prototype._initArtoolkit = function(){
 	}, 1000/50)
 
 	return
-
+	
 	function postInit(){
 		// check if arController is init
 		var arController = _this.context.arController
@@ -270,7 +215,7 @@ ARjs.MarkerControls.prototype._initArtoolkit = function(){
 				onMarkerFound(event)
 			}
 		})
-
+		
 	}
 
 	function onMarkerFound(event){
@@ -286,14 +231,14 @@ ARjs.MarkerControls.prototype._initArtoolkit = function(){
 //////////////////////////////////////////////////////////////////////////////
 //		aruco specific
 //////////////////////////////////////////////////////////////////////////////
-ARjs.MarkerControls.prototype._initAruco = function(){
+THREEx.ArMarkerControls.prototype._initAruco = function(){
 	this._arucoPosit = new POS.Posit(this.parameters.size, _this.context.arucoContext.canvas.width)
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //		init for Artoolkit
 //////////////////////////////////////////////////////////////////////////////
-ARjs.MarkerControls.prototype._initTango = function(){
+THREEx.ArMarkerControls.prototype._initTango = function(){
 	var _this = this
 	console.log('init tango ArMarkerControls')
 }

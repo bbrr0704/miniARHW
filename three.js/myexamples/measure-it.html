@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+
+<!-- three.js library -->
+<script src='../examples/vendor/three.js/build/three.js'></script>
+<script src="https://rawgit.com/jyunming-chen/tutsplus/master/js/text2D.js"></script>
+<!-- jsartookit -->
+<script src="../vendor/jsartoolkit5/build/artoolkit.min.js"></script>
+<script src="../vendor/jsartoolkit5/js/artoolkit.api.js"></script>
+<!-- include threex.artoolkit -->
+<!--script src="../build/ar.js"></script-->
+
+
+<script src="../src/threex/threex-artoolkitsource.js"></script>
+<script src="../src/threex/threex-artoolkitcontext.js"></script>
+<script src="../src/threex/threex-arbasecontrols.js"></script>
+<script src="../src/threex/threex-armarkercontrols.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+<div style='color:yellow;font-size:2em;position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - Measure the distance between 2 markers - hiro and kanji
+</div>
+
+<script>
+var renderer, scene, camera;
+var arToolkitSource, arToolkitContext;
+var markerRoot1, markerRoot2;
+var container, lineMesh;
+var sprite, canvas, context;
+var mysprite;
+
+init()
+animate()
+
+function onResize(){
+	arToolkitSource.onResize()	
+	arToolkitSource.copySizeTo(renderer.domElement)	
+	if( arToolkitContext.arController !== null ){
+		arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+	}	
+}
+
+function buildMarkers() {	
+	
+	//////////////////////////////////////////////////////////////////////////////
+	//		markerRoot1
+	//////////////////////////////////////////////////////////////////////////////
+
+	// build markerControls
+	markerRoot1 = new THREE.Group
+	markerRoot1.name = 'marker1'
+	scene.add(markerRoot1)
+	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, markerRoot1, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro',
+		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji',
+	})
+
+	// add a gizmo in the center of the marker
+	var geometry	= new THREE.OctahedronGeometry( 0.1, 0 )
+	var material	= new THREE.MeshNormalMaterial({
+		wireframe: true
+	}); 
+	var mesh	= new THREE.Mesh( geometry, material );
+	markerRoot1.add( mesh );
+
+	//////////////////////////////////////////////////////////////////////////////
+	//		markerRoot2
+	//////////////////////////////////////////////////////////////////////////////
+
+	// build markerControls
+	markerRoot2 = new THREE.Group
+	markerRoot2.name = 'marker2'
+	scene.add(markerRoot2)
+	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, markerRoot2, {
+		type : 'pattern',
+		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji',
+	})
+
+	// add a gizmo in the center of the marker
+	var geometry	= new THREE.OctahedronGeometry( 0.1, 0 )
+	var material	= new THREE.MeshNormalMaterial({
+		wireframe: true
+	}); 
+	var mesh	= new THREE.Mesh( geometry, material );
+	markerRoot2.add( mesh );
+
+}
+
+
+function init() {
+
+	// init renderer
+	renderer	= new THREE.WebGLRenderer({
+		antialias	: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+//	renderer.setSize( 640, 480 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	// init scene and camera
+	scene	= new THREE.Scene();
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Initialize a basic camera
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// Create a camera
+	camera = new THREE.Camera();
+	scene.add(camera);
+
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		sourceType : 'webcam',
+		
+		// to read from an image
+		// sourceType : 'image',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
+
+		// to read from a video
+		// sourceType : 'video',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',		
+	})
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	})
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+	})
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////	
+
+	// create atToolkitContext
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
+
+	buildMarkers();
+	
+	container = new THREE.Group
+	scene.add(container)
+	
+	//////////////////////////////////////////////////////////////////////////////
+	//		build lineMesh
+	//////////////////////////////////////////////////////////////////////////////
+	var material = new THREE.LineDashedMaterial( {
+		color:0xffff00,
+		dashSize: 1,
+		gapSize: 1
+	} );
+	var geometry = new THREE.Geometry();
+	geometry.vertices.push(new THREE.Vector3(1, 0, -3));
+	geometry.vertices.push(new THREE.Vector3(-1, 0, -3));
+	geometry.computeLineDistances() // must call this when the dash-line is initialized!!! 
+	lineMesh = new THREE.Line(geometry, material);
+	container.add(lineMesh)
+
+	//////////////////////////////////////////////////////////////////////////////
+	//		display the distance between the 2 markers
+	//////////////////////////////////////////////////////////////////////////////
+/*
+	// build texture
+	canvas = document.createElement( 'canvas' );
+	canvas.width = 128;
+	canvas.height = 64;
+	context = canvas.getContext( '2d' );
+	var texture = new THREE.CanvasTexture( canvas );
+
+	// build sprite
+	var material = new THREE.SpriteMaterial({
+		map: texture, 
+		color: 0xffffff, 
+	});
+	sprite = new THREE.Sprite( material );
+	sprite.scale.multiplyScalar(0.5)
+	//container.add(sprite)
+*/
+
+	/////////////////////////////////////////////
+	 // SpriteText
+	  var SpriteText2D = THREE_Text.SpriteText2D;
+	  var textAlign = THREE_Text.textAlign;
+
+	  mysprite = new SpriteText2D("TEST", {
+		align: textAlign.center,
+		//font: '10px Courier',
+		font: '40px monospace',
+		fillStyle: '#FFFF00',
+		antialias: true
+	  });
+	  mysprite.scale.set(.005, .005, .005);
+	  scene.add(mysprite);
+
+}
+
+
+function animate() {
+
+	requestAnimationFrame (animate)
+	renderer.render (scene, camera)
+	
+		if( arToolkitSource.ready === false )	return
+
+		arToolkitContext.update( arToolkitSource.domElement )
+	
+		if( markerRoot1.visible === true && markerRoot2.visible === true ){
+			container.visible = true
+	//		document.querySelector('.scanningSpinner').style.display = 'none'
+		}else{
+			container.visible = false
+	//		document.querySelector('.scanningSpinner').style.display = ''
+		}
+		
+		var geometry = lineMesh.geometry
+		geometry.vertices[0].copy(markerRoot1.position)
+		geometry.vertices[1].copy(markerRoot2.position)
+		geometry.verticesNeedUpdate = true
+
+		geometry.computeBoundingSphere();
+		geometry.computeLineDistances();
+		
+		var length = markerRoot1.position.distanceTo(markerRoot2.position)
+		console.log (length)
+		lineMesh.material.scale = length * 10
+		lineMesh.material.needsUpdate = true
+		
+		//console.log (markerRoot1.visible + ',' + markerRoot2.visible + ':' + container.visible)
+
+		// update sprite position
+		//sprite.position.addVectors(markerRoot1.position, markerRoot2.position).multiplyScalar(1/2)
+
+		// get the text to display
+		var length = markerRoot1.position.distanceTo(markerRoot2.position)
+		var text = length.toFixed(2)
+/*		
+		// put the text in the sprite
+		context.font = '40px monospace';
+		context.clearRect( 0, 0, canvas.width, canvas.height );
+		context.fillStyle = '#fff';
+		context.fillText(text, canvas.width/4, 3*canvas.height/4 )
+		sprite.material.map.needsUpdate = true
+*/	
+
+
+	// using SpriteText
+	mysprite.position.addVectors(markerRoot1.position, markerRoot2.position).multiplyScalar(1/2)
+	mysprite.position.y += .05;
+	mysprite.material.visible = markerRoot1.visible && markerRoot2.visible;
+	mysprite.text = (length*8.9).toFixed(2);  // 8.9cm: actual marker size
+
+}
+</script>
+
+
+</body>

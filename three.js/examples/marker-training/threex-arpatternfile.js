@@ -16,7 +16,7 @@ THREEx.ArPatternFile.encodeImageURL = function(imageURL, onComplete){
 		var patternFileString = THREEx.ArPatternFile.encodeImage(image)
 		onComplete(patternFileString)
 	}
-	image.src = imageURL;
+	image.src = imageURL;	
 }
 
 THREEx.ArPatternFile.encodeImage = function(image){
@@ -39,7 +39,7 @@ THREEx.ArPatternFile.encodeImage = function(image){
 		context.rotate(orientation);
 		context.drawImage(image, -canvas.width/2,-canvas.height/2, canvas.width, canvas.height);
 		context.restore();
-
+		
 		// get imageData
 		var imageData = context.getImageData(0, 0, canvas.width, canvas.height)
 
@@ -62,7 +62,7 @@ THREEx.ArPatternFile.encodeImage = function(image){
 			}
 		}
 	}
-
+		
 	return patternFileString
 }
 
@@ -70,32 +70,30 @@ THREEx.ArPatternFile.encodeImage = function(image){
 //		trigger download
 //////////////////////////////////////////////////////////////////////////////
 
-THREEx.ArPatternFile.triggerDownload =  function(patternFileString, fileName = 'pattern-marker.patt'){
+THREEx.ArPatternFile.triggerDownload =  function(patternFileString){
 	// tech from https://stackoverflow.com/questions/3665115/create-a-file-in-memory-for-user-to-download-not-through-server
 	var domElement = window.document.createElement('a');
 	domElement.href = window.URL.createObjectURL(new Blob([patternFileString], {type: 'text/plain'}));
-	domElement.download = fileName;
+	domElement.download = 'pattern-marker.patt';
 	document.body.appendChild(domElement)
 	domElement.click();
 	document.body.removeChild(domElement)
 }
 
-THREEx.ArPatternFile.buildFullMarker =  function(innerImageURL, pattRatio, size, color, onComplete){
+THREEx.ArPatternFile.buildFullMarker =  function(innerImageURL, onComplete){
 	var whiteMargin = 0.1
-	var blackMargin = (1 - 2 * whiteMargin) * ((1-pattRatio)/2)
-	// var blackMargin = 0.2
-
+	var blackMargin = 0.2
 	var innerMargin = whiteMargin + blackMargin
 
 	var canvas = document.createElement('canvas');
 	var context = canvas.getContext('2d')
-	canvas.width = canvas.height = size
+	canvas.width = canvas.height = 512
 
 	context.fillStyle = 'white';
 	context.fillRect(0,0,canvas.width, canvas.height)
-
+		
 	// copy image on canvas
-	context.fillStyle = color;
+	context.fillStyle = 'black';
 	context.fillRect(
 		whiteMargin * canvas.width,
 		whiteMargin * canvas.height,
@@ -123,7 +121,7 @@ THREEx.ArPatternFile.buildFullMarker =  function(innerImageURL, pattRatio, size,
 			canvas.width * (1-2*innerMargin),
 			canvas.height * (1-2*innerMargin)
 		);
-
+		
 		var imageUrl = canvas.toDataURL()
 		onComplete(imageUrl)
 	})

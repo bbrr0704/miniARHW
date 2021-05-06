@@ -280,13 +280,13 @@ body {
 
 	arToolkitSource.init(function onReady(){
 		// handle resize of renderer
-		arToolkitSource.onResizeElement(renderer.domElement)
+		arToolkitSource.onResize(renderer.domElement)
 	})
 
 	// handle resize
 	window.addEventListener('resize', function(){
 		// handle arToolkitSource resize
-		arToolkitSource.onResizeElement(renderer.domElement)
+		arToolkitSource.onResize(renderer.domElement)
 	})
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -331,7 +331,7 @@ body {
 	//////////////////////////////////////////////////////////////////////////////////
 
 
-	var mesh = new THREE.AxesHelper()
+	var mesh = new THREE.AxisHelper()
 	markerRoot.add(mesh)
 
 	// add a torus knot
