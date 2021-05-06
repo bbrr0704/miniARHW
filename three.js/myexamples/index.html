@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>AR.js</title>
+</head>
+
+<body>
+<h2>Experimenting AR.js</h2>
+<h3>working platforms: <br>
+1. Desktop Chrome with webcam <br>
+2. iPAD Pro with Safari
+</h3>
+Use <a href="testMarker.png">these testing markers </a>for the following demos 
+<hr>
+Checked with both platforms (rewrite in init-animate form)
+<p>0. <a href="minimal0.html">minimal version</a></p>
+<p>1. <a href="minimal0-1.html">scale-and-move</a></p>
+<p>2. <a href="smoothCompare.html">smooth control</a> [kanji, HIRO], with & WITHOUT smoothedControl</p>
+
+
+<p>3. <a href="shadow.html">Shadow</a>; ShadowMaterial is used to receive shadow on real (AR) scene</p>
+<p>4. Shadow for <a href="shadow-0.html">horizontal marker</a>; and <a href="shadow-1.html">vertical marker</a> </p>
+<p>5. <a href="billboard-hulk.html">Billboarded Hulk</a></p>
+<p>6. <a href="markers-jump.html">Billboarded Hulk</a>, jumping sideways</p>
+<p>7. <a href="shadow-hulk.html">Billboarded Hulk</a>, with shadows [advanced]</p>
+<p>8. <a href="multi-markers.html"> exchanging marker spaces </a> [kanji, hiro]</p>
+
+<hr>
+<p>Picking: Require Mobile/Device Interaction</p>
+<p>9. <a href="minimal-picker.html">pick-toggle-spin (rayCaster)</a></p>
+<p>10. <a href="markers.html">Click Hiro to control</a> [kanji, hiro]</p>
+<p>11. <a href="minimal-tracer.html">tracer</a></p>
+<p>12. <a href="minimal-HUD-pick2D-corrected.html">2D HUD pick</a> class Button</p>
+<p>13. <a href="minimal-HUD-long-pressed.html">HUD long-pressed button</a></p>
+<p><a href="minimal-HUD-pick2D.html">2D HUD pick (4/20)</a></p>
+<p><a href="minimal-HUD-pick.html">HUD pick (3/xx)</a></p>
+<p>[<a href="pokemon-1.html">Pokemon prototype</a>, with a power (swing) meter]</p>
+
+<hr>
+Multi-marker: require equal-sized Hiro and Kanji markers (as in <a href="AR-multi-marker.jpg">this</a> file)
+<p>a. <a href="multi-markers0.html">Independent marker space</a></p>
+<p>b. <a href="multi-markers0p.html">Inter marker dashed line</a></p>
+<p>c. <a href="multi-markers1.html">Deputy marker (first cut)</a></p>
+<p>d. <a href="multi-markers2.html">Deputy marker (complete)</a></p>
+
+<hr>
+Billboard: require Hiro marker
+<p>e. <a href="billboard-aim.html">圓形材質，校正billboard的正確性</a></p>
+<p>f. <a href="billboard-hulk.html">去背的Hulk材質</a></p>
+<p>g. <a href="billboard-explode.html">animated explosion sprite</a></p>
+
+<hr>
+Advanced:
+<p><a href="spriteText.html">Sprite</a> using <a href="https://sites.google.com/site/cgwith3js/home/text-rendering">SpriteText</a></p>
+<p><a href="measure-it.html">measure-it</a>: my version, using <a href="https://sites.google.com/site/cgwith3js/home/text-rendering">SpriteText</a>
+<br>
+this does not use the built AR.JS (kind of messy)
+</p>
+<p><a href="markercloak.html">marker cloak </a>.. superimpose the neighbor video texture</p>
+
+<hr>
+Experimental:
+<p><a href="size-1.html">Singler-marker, size</a></p>
+<p><a href="size-2.html">dual-marker, size</a></p>
+<p><a href="minimal-size.html">right size (3/24)</a></p>
+<p><a href="http://jsfiddle.net/jmcjc5u/2nz0b64f/">Pokemon Go (3JS version)</a></a></p>
+
+</body>
+</html>

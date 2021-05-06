@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<!-- three.js library -->
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+<div style='color:cyan; font-size:2em;position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> 
+	<br/>
+	Multi-marker: deputy marker
+	<p style='color:purple
+	' id='acting'></p>
+</div>
+
+<script>
+
+// global variables
+var renderer, scene, camera;
+var markerKanji, markerHiro;
+var arToolKitSource, arToolKitContext;
+var angle = 0;
+
+var _iOSDevice;
+
+init();
+animate();
+
+function init() {
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
+
+	console.log ('iOS: ' + _iOSDevice)
+
+
+	// init renderer
+	renderer	= new THREE.WebGLRenderer({
+		// antialias	: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	// renderer.setPixelRatio( 1/2 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	// init scene and camera
+	scene	= new THREE.Scene();
+	
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Initialize a basic camera
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// Create a camera
+	camera = new THREE.Camera();
+	scene.add(camera);
+
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		sourceType : 'webcam',
+
+		// to read from an image
+		// sourceType : 'image',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
+
+		// to read from a video
+		// sourceType : 'video',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',		
+	})
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	})
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
+	
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+		maxDetectionRate: 30,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
+
+	markerHiro = addMarkerHiro();
+	scene.add (markerHiro); 
+	markerKanji = addMarkerKanji();
+	scene.add (markerKanji);
+	
+}
+
+// markerHiro  --> sceneGroup
+// Hiro as primary markerHiro
+
+// sceneGroup: the group of things to display
+// each markerRoot has its own copy	
+
+function makeSceneGroup() {
+	// sceneGroup: a sphere at origin, floor, axes
+	let sceneGroup = new THREE.Group();
+
+	// old three.js: need to set attribute as follows...
+	let vertices = [0, 0.2, 0, -0.1, 0, 0, 0.1, 0, 0, 0, 0, -0.4];
+	var geometry = new THREE.BufferGeometry();
+	geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+		
+	let indices = [0,1,2, 0,2,3, 0,3,1, 1,3,2];
+	geometry.setIndex(indices);
+	geometry.computeVertexNormals();
+	var mesh = new THREE.Mesh (geometry, new THREE.MeshNormalMaterial());
+		
+	let floor = new THREE.Mesh (new THREE.PlaneGeometry(5,5), 
+		new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+	floor.rotation.x = -Math.PI/2;
+	
+	sceneGroup.add (mesh, floor, new THREE.AxisHelper(3));
+	return sceneGroup;
+}	
+
+function addMarkerHiro(){
+	let markerRootHiro = new THREE.Group()
+
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootHiro, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+	})
+
+	markerRootHiro.add (makeSceneGroup());
+		
+	return markerRootHiro;
+}	
+
+function addMarkerKanji () {
+	let markerRootKanji = new THREE.Group();
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootKanji, {
+		type : 'pattern',
+		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
+	})
+	
+	markerRootKanji.add (makeSceneGroup());
+
+	return markerRootKanji;
+}
+
+// markerHiro
+// markerHiro.children[0]: sceneGroup added
+// markerHiro.children[0].children[0]: the mesh in the sceneGroup
+
+function update() {
+    // get the converted position of the mesh in Hiro marker (local coord) to world(eye) coord
+    // transform that into local coord of Kanji marker
+    // copy that to the (local) position of the mesh in the Kanji sceneGroup
+    
+	let localpos = markerKanji.worldToLocal (markerHiro.children[0].localToWorld(
+	               markerHiro.children[0].children[0].position.clone()));
+	markerKanji.children[0].children[0].position.copy (localpos);
+
+    // old three.js: inverse() not invert()
+    let relativeRotation = markerKanji.quaternion.clone().inverse().multiply (
+          markerHiro.quaternion.clone().multiply(markerHiro.children[0].children[0].quaternion));
+    markerKanji.children[0].children[0].quaternion.copy (relativeRotation);
+
+}
+
+function animate() {
+	requestAnimationFrame (animate);
+	renderer.render (scene, camera);
+	
+	if( arToolkitSource.ready === false )	return
+	arToolkitContext.update( arToolkitSource.domElement )
+		
+	if (markerHiro.visible === true) {  // Obj3d.visible: set by ARtoolkit
+		console.log ('hiro visible');
+		$('#acting').text ('Hiro');
+		markerKanji.visible = false;  // primary visible --> make the other one invisible
+	} else if (markerKanji.visible === true) {
+		console.log ('hiro NOT visible, kanji visible')
+		$('#acting').text ('Kanji');
+	} else {
+		$('#acting').text ('NONE');	
+	}
+
+	// animate things in Hiro
+	angle += 0.05;
+	markerHiro.children[0].children[0].position.set (Math.cos(angle), 0.1, -Math.sin(angle));
+	markerHiro.children[0].children[0].rotation.y = angle;	
+	update();
+
+}
+
+</script></body>
