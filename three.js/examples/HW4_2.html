@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
 <!-- three.js library -->
 <script src='../examples/vendor/three.js/build/three.min.js'></script>
+
 <!-- ar.js -->
 <script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+
 
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
 <div style='font-size:2em;position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
@@ -127,10 +131,30 @@ function addMarkerHiro () {
 	let markerRootHiro = new THREE.Group();
 	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootHiro, {
 		type : 'pattern',
-		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
 	})
 	
-	// nothing to added here (for now)	
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('')
+	let texture = loader.load( 'https://i.imgur.com/sFfSAYH.png?1' );
+	
+	let material = new THREE.MeshBasicMaterial( { 
+		map: texture,
+		//color: 0xffff00,
+		side: THREE.DoubleSide
+		} );
+	let geometry	= new THREE.PlaneGeometry(1,1);
+	let mesh	= new THREE.Mesh( geometry, material );
+	//mesh.position.y	= geometry.parameters.height/2 // mesh centered at root
+	aimGroup = new THREE.Object3D();
+	aimGroup.add (mesh);
+	let origin = new THREE.Mesh (new THREE.OctahedronGeometry(0.1), new THREE.MeshNormalMaterial());
+	markerRootHiro.add (aimGroup, origin);
+	
+	/// add gridhelper
+	var gridXZ = new THREE.GridHelper(1,10);
+	//markerRootHiro.add (gridXZ);
+	
 	return markerRootHiro;
 }
 
@@ -142,8 +166,16 @@ function animate() {
   arToolkitContext.update( arToolkitSource.domElement )
 
   renderer.render (scene, camera);
-  //let msg = baseS + ', ' + baseT;
-  //console.log (msg);
+  
+  
+  let localCamera = markerHiro.worldToLocal (new THREE.Vector3(0,0,0))
+	
+	// to rotate (0,0,1) to localCamera [markerCoord]
+	let point = new THREE.Vector3(0,0,1);
+	let angle = point.angleTo (localCamera);
+	let axis = new THREE.Vector3();
+	axis.crossVectors(point, localCamera).normalize(); // normalization is IMPORTANT!
+	aimGroup.quaternion.setFromAxisAngle (axis, angle);
 		
 }
 

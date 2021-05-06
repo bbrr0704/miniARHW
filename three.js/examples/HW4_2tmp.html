@@ -3,45 +3,74 @@
 
 <!-- three.js library -->
 <script src='../examples/vendor/three.js/build/three.min.js'></script>
-
+<script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
 <!-- ar.js -->
 <script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
+<script src="https://threejs.org/build/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+</script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.js"> 
+</script>
+
+<br><br>
+
+<p id="press" style="color:black;text-align:center;">
+	did not press
+</p>
+
+<br>
+<p id="text" style ="color:blue">
+&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; color
+</p>
 
 
-
-<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
-<div style='font-size:2em;position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
-	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a>
-	<br/>
-	Billboarded Explode (Hiro)
-</div>
-<script src="explode.js"></script>
 <script>
 
 // global variables
-var renderer, scene, camera;
+var renderer, scene, camera,sceneHUD,cameraHUD,whRatio;
+var stats;
 var arToolKitSource, arToolKitContext;
-
 var markerHiro;
+var pos = 0;
+var angle = 0 ,omega = 0;;
+var rotate = false;
+var cubeSpin = false;
 
-var _iOSDevice;
+var button;
+var pickables= [];
+var mouse = new THREE.Vector2();
+var raycaster = new THREE.Raycaster();
 
+class Button{
+    constructor(cx, cy, size, colorString = 'yellow',map=null){
+    this.centerX= cx;
+    this.centerY= cy;
+    this.size = size;
+    let material =new THREE.MeshBasicMaterial({color:colorString,transparent:true,opacity:0.7});
+    if(map)
+       material.map=map;
+       this.mesh=new THREE.Mesh(new THREE.CircleGeometry(size,10),material);
+       this.mesh.position.set(cx,cy,0);
+    }
+    setLocation(lx,ly){
+    this.mesh.position.set(lx,ly,0);
+    }
+    d2To(v){
+    return Math.sqrt((v[0]-this.centerX)*(v[0]-this.centerX)+(v[1]-this.centerY)*(v[1]-this.centerY));
+    }
+}
 init();
 animate();
-
 function init() {
-	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
-
-	console.log ('iOS: ' + _iOSDevice)
-
-
+	
 	// init renderer
 	renderer	= new THREE.WebGLRenderer({
 		// antialias	: true,
 		alpha: true
 	});
+	renderer.autoClear = false;
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
 	// renderer.setPixelRatio( 1/2 );
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -49,19 +78,23 @@ function init() {
 	renderer.domElement.style.top = '0px'
 	renderer.domElement.style.left = '0px'
 	document.body.appendChild( renderer.domElement );
-
+    
+	whRatio = window.innerWidth/window.innerHeight;
 	
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
+
 	// init scene and camera
 	scene	= new THREE.Scene();
 	
-	//////////////////////////////////////////////////////////////////////////////////
-	//		Initialize a basic camera
-	//////////////////////////////////////////////////////////////////////////////////
-
-	// Create a camera
+	// Create a BASIC camera
 	camera = new THREE.Camera();
 	scene.add(camera);
-
+    sceneHUD =new THREE.Scene();
+	
+	halfH = 10;
+	halfW = halfH*whRatio;
+	cameraHUD = new THREE.OrthographicCamera(-halfW,halfW, halfH,-halfH,-10,10);
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
 	////////////////////////////////////////////////////////////////////////////////
@@ -69,14 +102,6 @@ function init() {
 	arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
 		sourceType : 'webcam',
-
-		// to read from an image
-		// sourceType : 'image',
-		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
-
-		// to read from a video
-		// sourceType : 'video',
-		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',		
 	})
 
 	arToolkitSource.init(function onReady(){
@@ -110,32 +135,55 @@ function init() {
 		// copy projection matrix to camera
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
 	})
-	
 	markerHiro = addMarkerHiro();
 	scene.add (markerHiro); 
-		
-	// to trigger explosion
-	window.addEventListener ('mousedown', doMouseDown, false);
-	// initialize explosion sprite
-	initSprite(markerHiro);
-		
-}
-
-function doMouseDown (e) {
-	if (e.button === 0) {
-		setTimeout (spriteAnimate, 0);
-	}
-}
-
-function addMarkerHiro () {
-	let markerRootHiro = new THREE.Group();
-	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootHiro, {
-		type : 'pattern',
-		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
-	})
 	
-	let loader = new THREE.TextureLoader();
-	loader.setCrossOrigin('')
+	document.addEventListener('touchstart',onMouseDown,false);
+	
+	
+	initSprite(markerHiro);
+}
+	
+function addMarkerHiro(){
+	
+    markerRoot = new THREE.Group()
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.hiro'
+	})
+	/*
+	// add a torus knot & a transparent box	
+	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
+	var material	= new THREE.MeshNormalMaterial();
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= 0.5
+	markerRoot.add (mesh);
+	
+	mesh = new THREE.Mesh (new THREE.BoxGeometry(1,1,1), 
+				new THREE.MeshNormalMaterial({transparent:true, opacity:0.3}));
+	mesh.position.y	= 0.5
+	markerRoot.add (mesh);
+	*/
+	//////////////////////
+	var loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('');
+  
+  // load a resource
+  loader.load(
+    // resource URL
+    'https://i.imgur.com/YPLd0tH.png',
+    // Function when resource is loaded
+    function(texture) {
+      // do something with the texture
+      // Plane with default texture coordinates [0,1]x[0,1]
+      console.log('texture loaded...')
+      button = new Button(halfW/2,-halfH/2,halfH/3,'red',texture);
+      sceneHUD.add(button.mesh);
+	  pickables.push(button.mesh);
+    },
+  );
+  
+		
 	let texture = loader.load( 'https://i.imgur.com/sFfSAYH.png?1' );
 	
 	let material = new THREE.MeshBasicMaterial( { 
@@ -149,35 +197,52 @@ function addMarkerHiro () {
 	aimGroup = new THREE.Object3D();
 	aimGroup.add (mesh);
 	let origin = new THREE.Mesh (new THREE.OctahedronGeometry(0.1), new THREE.MeshNormalMaterial());
-	markerRootHiro.add (aimGroup, origin);
-	
-	/// add gridhelper
-	var gridXZ = new THREE.GridHelper(1,10);
-	//markerRootHiro.add (gridXZ);
-	
-	return markerRootHiro;
-}
+	markerRoot.add (aimGroup, origin);
 
+		
+
+	var gridXZ = new THREE.GridHelper(1, 10, 'red', 'white');
+	
+	return markerRoot;
+}	
 
 function animate() {
-  requestAnimationFrame (animate);
+	requestAnimationFrame (animate);
+	stats.update();
+	if( arToolkitSource.ready === false )	return
+	arToolkitContext.update( arToolkitSource.domElement )
+	renderer.clear();
+	renderer.render(scene,camera);
+	button.mesh.material.visible = markerRoot.visible;
+	renderer.render(sceneHUD,cameraHUD);
 	
-  if( arToolkitSource.ready === false )	return
-  arToolkitContext.update( arToolkitSource.domElement )
-
-  renderer.render (scene, camera);
-  
-  
-  let localCamera = markerHiro.worldToLocal (new THREE.Vector3(0,0,0))
+	
+	let localCamera = markerHiro.worldToLocal (new THREE.Vector3(0,0,0))
 	
 	// to rotate (0,0,1) to localCamera [markerCoord]
 	let point = new THREE.Vector3(0,0,1);
 	let angle = point.angleTo (localCamera);
 	let axis = new THREE.Vector3();
 	axis.crossVectors(point, localCamera).normalize(); // normalization is IMPORTANT!
-	aimGroup.quaternion.setFromAxisAngle (axis, angle);
-		
+	aimGroup.quaternion.setFromAxisAngle (axis, angle
+ 	
 }
 
-</script>
-</body>
+function onMouseDown(event){
+ event.preventDefault();
+
+ var touches = event.changedTouches;
+ for( var i = 0; i < touches.length;i++ ){
+	 mouse.x = (touches[i].pageX/window.innerWidth)*2-1;
+	 mouse.y = -(touches[i].pageY/window.innerHeight)*2+1;
+	 
+	 raycaster.setFromCamera(mouse,cameraHUD);
+	 
+	 var intersects = raycaster.intersectObjects(pickables);
+	 
+	 if(intersects.length > 0){
+	    setTimeout (spriteAnimate, 0);
+	 }
+	 }
+ }
+</script></body>
