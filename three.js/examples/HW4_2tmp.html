@@ -14,16 +14,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.js"> 
 </script>
 
-<br><br>
 
-<p id="press" style="color:black;text-align:center;">
-	did not press
-</p>
+<script src="explode.js"></script>
 
-<br>
-<p id="text" style ="color:blue">
-&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; color
-</p>
+
+
 
 
 <script>
@@ -149,7 +144,7 @@ function addMarkerHiro(){
     markerRoot = new THREE.Group()
 	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
 		type : 'pattern',
-		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.hiro'
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
 	})
 	/*
 	// add a torus knot & a transparent box	
