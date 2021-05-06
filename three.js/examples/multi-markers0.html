@@ -2,34 +2,40 @@
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <!-- three.js library -->
 <script src='../examples/vendor/three.js/build/three.min.js'></script>
-<script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
 <!-- ar.js -->
 <script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
 
-<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
-	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js mobile performance
-	<br/>
-	init-animate format<br>
-	smoothed control
-</div><script>
-var renderer, scene, camera, stats;
-var arToolkitSource, arToolkitContext;
-var smoothedControls, markerRoot, smoothedRoot;
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+<div style='font-size:2em; color:cyan; position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a>
+	<br>
+	Independent Markers
+	<p style='color:yellow' id='printDis'></p>
+</div>
+
+<script>
+
+// global variables
+var renderer, scene, camera;
+var markerKanji, markerHiro;
+var arToolKitSource, arToolKitContext;
+
+var _iOSDevice;
 
 init();
 animate();
 
-function onResize(){
-	arToolkitSource.onResize()	
-	arToolkitSource.copySizeTo(renderer.domElement)	
-	if( arToolkitContext.arController !== null ){
-		arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
-	}	
-}
-
 function init() {
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
 
+	console.log ('iOS: ' + _iOSDevice)
+
+
+	// init renderer
 	renderer	= new THREE.WebGLRenderer({
 		// antialias	: true,
 		alpha: true
@@ -78,12 +84,17 @@ function init() {
 	window.addEventListener('resize', function(){
 		onResize()
 	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
 	////////////////////////////////////////////////////////////////////////////////
 	//          initialize arToolkitContext
 	////////////////////////////////////////////////////////////////////////////////
 	
-
-	// create atToolkitContext
 	arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
 		detectionMode: 'mono',
@@ -96,69 +107,61 @@ function init() {
 		// copy projection matrix to camera
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
 	})
+
+	markerHiro = addMarkerHiro();
+	scene.add (markerHiro); 
+	markerKanji = addMarkerKanji();
+	scene.add (markerKanji);
 	
-	////////////////////////////////////////////////////////////////////////////////
-	//          Create a ArMarkerControls
-	////////////////////////////////////////////////////////////////////////////////
+}
+
 	
-	markerRoot = new THREE.Group
-	scene.add(markerRoot)
-	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+
+	
+function addMarkerKanji () {
+	let markerRootKanji = new THREE.Group();
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootKanji, {
+		type : 'pattern',
+		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
+	})
+	// add a sphere for Hiro
+	var geometry	= new THREE.SphereGeometry(0.1,20,20);
+	var material	= new THREE.MeshNormalMaterial();
+	box2	= new THREE.Mesh( geometry, material );
+	box2.position.y	= 0.1;
+	
+	markerRootKanji.add (box2);
+
+	return markerRootKanji;
+}
+
+function addMarkerHiro(){
+	let markerRootHiro = new THREE.Group()
+
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootHiro, {
 		type : 'pattern',
 		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
-		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
 	})
 
-	// build a smoothedControls
-	smoothedRoot = new THREE.Group()
-	scene.add(smoothedRoot)
+	// add a box for Hiro
+	var geometry	= new THREE.BoxGeometry(0.2,0.2,0.2);
+	var material	= new THREE.MeshNormalMaterial();
+	box1	= new THREE.Mesh( geometry, material );
+	box1.position.y	= 0.1;
 	
-	smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
-		lerpPosition: 0.4,
-		lerpQuaternion: 0.3,
-		lerpScale: 1,
-	})
+	markerRootHiro.add (box1);
+		
+	return markerRootHiro;
+}	
 
-	//////////////////////////////////////////////////////////////////////////////////
-	//		add an object in the scene
-	//////////////////////////////////////////////////////////////////////////////////
-
-	let arWorldRoot = smoothedRoot
-	
-	// add a torus knot	
-	let geometry	= new THREE.CubeGeometry(1,1,1);
-	let material	= new THREE.MeshNormalMaterial({
-		transparent : true,
-		opacity: 0.5,
-		side: THREE.DoubleSide
-	}); 
-	let mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= geometry.parameters.height/2
-	arWorldRoot.add( mesh );
-	
-	geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
-	material	= new THREE.MeshNormalMaterial(); 
-	mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= 0.5
-	arWorldRoot.add( mesh );
-
-	stats = new Stats();
-	document.body.appendChild( stats.dom );
-}
 
 function animate() {
-
 	requestAnimationFrame (animate);
 	renderer.render (scene, camera);
-	stats.update();
 	
 	if( arToolkitSource.ready === false )	return
-
 	arToolkitContext.update( arToolkitSource.domElement )
 
-	smoothedControls.update (markerRoot)
-	smoothedRoot.children[1].rotation.x += 0.1;
-	
 }
-	
+
 </script></body>

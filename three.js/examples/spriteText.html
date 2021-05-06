@@ -1,28 +1,24 @@
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <!-- three.js library -->
-<script src='../examples/vendor/three.js/build/three.js'></script>
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
 <script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
-<!-- jsartookit -->
-<script src="../vendor/jsartoolkit5/build/artoolkit.min.js"></script>
-<script src="../vendor/jsartoolkit5/js/artoolkit.api.js"></script>
-<!-- include threex.artoolkit -->
-<script src="../src/threex/threex-artoolkitsource.js"></script>
-<script src="../src/threex/threex-artoolkitcontext.js"></script>
-<script src="../src/threex/threex-arbasecontrols.js"></script>
-<script src="../src/threex/threex-armarkercontrols.js"></script>
+<script src="https://rawgit.com/jyunming-chen/tutsplus/master/js/text2D.js"></script>
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
 
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js mobile performance
 	<br/>
-	Code by <a href="https://twitter.com/snigelpaogat" target='_blank'>Fredrik Blomqvist</a> and 
-	<a href='https://twitter.com/jerome_etienne' target='_blank'>@jerome_etienne</a>
-</div>
-<script>
+	init-animate format<br>
+	smoothed control
+</div><script>
 var renderer, scene, camera, stats;
 var arToolkitSource, arToolkitContext;
-var markerRoot;
+var smoothedControls, markerRoot, smoothedRoot;
+var sprite;
+var _iOSDevice;
 
 init();
 animate();
@@ -36,19 +32,17 @@ function onResize(){
 }
 
 function init() {
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
 
-	// init renderer
+	console.log ('iOS: ' + _iOSDevice)
+
 	renderer	= new THREE.WebGLRenderer({
 		// antialias	: true,
 		alpha: true
 	});
-	
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap
-	renderer.shadowMap.enabled = true;
-
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
 	// renderer.setPixelRatio( 1/2 );
-
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.domElement.style.position = 'absolute'
 	renderer.domElement.style.top = '0px'
@@ -57,23 +51,7 @@ function init() {
 
 	// init scene and camera
 	scene	= new THREE.Scene();
-
-	var ambient = new THREE.AmbientLight( 0x666666 );
-	scene.add( ambient );
-
-	var directionalLight = new THREE.DirectionalLight( 'white' );
-	directionalLight.position.set( 1, 2, 0.3 ).setLength(2)
-
-	directionalLight.shadow.mapSize.set(128,128)
-	directionalLight.shadow.camera.bottom = -0.6
-	directionalLight.shadow.camera.top = 0.6
-	directionalLight.shadow.camera.right = 0.6
-	directionalLight.shadow.camera.left = -0.6
-	directionalLight.castShadow = true;
 	
-	//scene.add(new THREE.CameraHelper( directionalLight.shadow.camera ))
-	scene.add( directionalLight );
-
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
 	//////////////////////////////////////////////////////////////////////////////////
@@ -87,16 +65,16 @@ function init() {
 	////////////////////////////////////////////////////////////////////////////////
 
 	arToolkitSource = new THREEx.ArToolkitSource({
-		// to read from the webcam
+		// to read from the webcam 
 		sourceType : 'webcam',
 
 		// to read from an image
 		// sourceType : 'image',
-		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
 
 		// to read from a video
 		// sourceType : 'video',
-		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',		
 	})
 
 	arToolkitSource.init(function onReady(){
@@ -110,15 +88,15 @@ function init() {
 	////////////////////////////////////////////////////////////////////////////////
 	//          initialize arToolkitContext
 	////////////////////////////////////////////////////////////////////////////////
-
+	
 
 	// create atToolkitContext
 	arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
 		detectionMode: 'mono',
-		// maxDetectionRate: 30,
-		// canvasWidth: 80*3,
-		// canvasHeight: 60*3,
+		maxDetectionRate: 30,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
 	})
 	// initialize it
 	arToolkitContext.init(function onCompleted(){
@@ -126,73 +104,91 @@ function init() {
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
 	})
 	
-	
 	////////////////////////////////////////////////////////////////////////////////
 	//          Create a ArMarkerControls
-	// (may not be necessary)
 	////////////////////////////////////////////////////////////////////////////////
-
-	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
+	
+	markerRoot = new THREE.Group
+	scene.add(markerRoot)
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
 		type : 'pattern',
-		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro',
-		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji',
-		// as we controls the camera, set changeMatrixMode: 'cameraTransformMatrix'
-		changeMatrixMode: 'cameraTransformMatrix'
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
 	})
-	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
-	scene.visible = false
+
+	// build a smoothedControls
+	smoothedRoot = new THREE.Group()
+	scene.add(smoothedRoot)
+	
+	smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
+		lerpPosition: 0.4,
+		lerpQuaternion: 0.3,
+		lerpScale: 1,
+	})
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		add an object in the scene
 	//////////////////////////////////////////////////////////////////////////////////
 
-	markerRoot = new THREE.Object3D();
-	scene.add(markerRoot);
+	let arWorldRoot = smoothedRoot
+
+	// add a torus knot	
+	let geometry	= new THREE.CubeGeometry(1,1,1);
+	let material	= new THREE.MeshNormalMaterial({
+		transparent : true,
+		opacity: 0.5,
+		side: THREE.DoubleSide
+	}); 
+	let mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= geometry.parameters.height/2
+	arWorldRoot.add( mesh );
 	
-	// make it slightly larger for better view
-	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16); 
-	var material	= new THREE.MeshLambertMaterial();
-	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.castShadow = true;
-	mesh.receiveShadow = true;
-	mesh.position.y	= 0.7
-	markerRoot.add( mesh );
-		
-	// point the directionalLight to the marker
-	directionalLight.target = mesh
+	geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
+	material	= new THREE.MeshNormalMaterial(); 
+	mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= 0.5
+	arWorldRoot.add( mesh );
 
-	// add a transparent ground-plane shadow-receiver
-	var material = new THREE.ShadowMaterial();
-	//var material = new THREE.MeshLambertMaterial({color:0xffff00, side:THREE.DoubleSide});
-
-	//material.opacity = 0.7; //! bug in threejs. can't set in constructor
-
-	var geometry = new THREE.PlaneGeometry(3, 3) // should be large enough
-	var planeMesh = new THREE.Mesh( geometry, material);
-	planeMesh.receiveShadow = true;
-	planeMesh.depthWrite = false;
-	planeMesh.rotation.x = -Math.PI/2
-	markerRoot.add(planeMesh);
-	
-    stats = new Stats();
+	stats = new Stats();
 	document.body.appendChild( stats.dom );
-}
+	
+	/////////////////////////////////////////////
+	 // SpriteText
+  var SpriteText2D = THREE_Text.SpriteText2D;
+  var textAlign = THREE_Text.textAlign;
 
+  sprite = new SpriteText2D("TEST", {
+	align: textAlign.center,
+	font: '10px Courier',
+	fillStyle: '#FFFF00',
+	antialias: true
+  });
+//  sprite.position.set(0, 0, 0);
+  sprite.scale.set(.015, .015, .015);
+  scene.add(sprite);
+
+}
 
 function animate() {
 
-	requestAnimationFrame (animate)
-	renderer.render (scene, camera)
+	requestAnimationFrame (animate);
+	renderer.render (scene, camera);
 	stats.update();
-
+	
 	if( arToolkitSource.ready === false )	return
 
 	arToolkitContext.update( arToolkitSource.domElement )
+
+	smoothedControls.update (markerRoot)
+	smoothedRoot.children[1].rotation.x += 0.1;
 	
-	// update scene.visible if the marker is seen ???
-	scene.visible = camera.visible
-		
-	markerRoot.children[0].rotation.x += 0.04;
-	
+
+	// using SpriteText
+	sprite.position.copy (smoothedRoot.position)
+	//console.log (sprite.position.x + ',' + sprite.position.y + ',' + sprite.position.z)	
+	sprite.position.y += 1.5;
+	sprite.material.visible = markerRoot.visible;
+	sprite.text = 'SPRITE'
 }
+	
 </script></body>

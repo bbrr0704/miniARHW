@@ -7,15 +7,19 @@
 <script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
 
-<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'>
+<div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js mobile performance
-	<br/>
-	init-animate format<br>
-	smoothed control
+	<br>
+	Observe the further from origin, the poorer the picking accuracy (platform 1)
+	<br> Platform 2 is perfect precision
 </div><script>
+
 var renderer, scene, camera, stats;
+var raycaster, puck;
 var arToolkitSource, arToolkitContext;
-var smoothedControls, markerRoot, smoothedRoot;
+var markerRoot;
+var _iOSDevice;
 
 init();
 animate();
@@ -29,11 +33,17 @@ function onResize(){
 }
 
 function init() {
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
 
+	console.log ('iOS: ' + _iOSDevice)
+
+	// init renderer
 	renderer	= new THREE.WebGLRenderer({
 		// antialias	: true,
 		alpha: true
 	});
+	
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
 	// renderer.setPixelRatio( 1/2 );
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -44,7 +54,7 @@ function init() {
 
 	// init scene and camera
 	scene	= new THREE.Scene();
-	
+				
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
 	//////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +106,8 @@ function init() {
 		// copy projection matrix to camera
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
 	})
-	
+
+		
 	////////////////////////////////////////////////////////////////////////////////
 	//          Create a ArMarkerControls
 	////////////////////////////////////////////////////////////////////////////////
@@ -109,45 +120,35 @@ function init() {
 		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
 	})
 
-	// build a smoothedControls
-	smoothedRoot = new THREE.Group()
-	scene.add(smoothedRoot)
-	
-	smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
-		lerpPosition: 0.4,
-		lerpQuaternion: 0.3,
-		lerpScale: 1,
-	})
+	// add a picking plane
 
-	//////////////////////////////////////////////////////////////////////////////////
-	//		add an object in the scene
-	//////////////////////////////////////////////////////////////////////////////////
-
-	let arWorldRoot = smoothedRoot
-	
-	// add a torus knot	
-	let geometry	= new THREE.CubeGeometry(1,1,1);
-	let material	= new THREE.MeshNormalMaterial({
+	var geometry	= new THREE.PlaneGeometry(10, 8.333);
+	var material	= new THREE.MeshNormalMaterial({
 		transparent : true,
 		opacity: 0.5,
 		side: THREE.DoubleSide
 	}); 
-	let mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= geometry.parameters.height/2
-	arWorldRoot.add( mesh );
-	
-	geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
-	material	= new THREE.MeshNormalMaterial(); 
-	mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= 0.5
-	arWorldRoot.add( mesh );
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.rotation.x = -Math.PI/2;
+		
+	markerRoot.add (mesh);
 
+	markerRoot.add (new THREE.GridHelper (20,20,'red','white'))	
+	
+	var axes = new THREE.AxisHelper(1);
+	markerRoot.add (axes);
+	markerRoot.add (puck);
+	
+	//////////////////////////////////////////////////////////////////////////////////
+	//		render the whole thing on the page
+	//////////////////////////////////////////////////////////////////////////////////
 	stats = new Stats();
 	document.body.appendChild( stats.dom );
+	
 }
-
+	
+	
 function animate() {
-
 	requestAnimationFrame (animate);
 	renderer.render (scene, camera);
 	stats.update();
@@ -156,9 +157,5 @@ function animate() {
 
 	arToolkitContext.update( arToolkitSource.domElement )
 
-	smoothedControls.update (markerRoot)
-	smoothedRoot.children[1].rotation.x += 0.1;
-	
 }
-	
 </script></body>

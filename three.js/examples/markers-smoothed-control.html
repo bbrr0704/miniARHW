@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<!-- three.js library -->
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
+<script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js mobile performance
+	<br/>
+	Contact me any time at <a href='https://twitter.com/jerome_etienne' target='_blank'>@jerome_etienne</a>
+</div>
+
+<script>
+
+// global variables
+var renderer, scene, camera;
+var stats;
+var markerKanji, markerHiro;
+var arToolKitSource, arToolKitContext;
+
+var raycaster, mouse, pickables;
+var showHiro = false;
+
+init();
+animate();
+
+function init() {
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Init
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// init renderer
+	renderer	= new THREE.WebGLRenderer({
+		// antialias	: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	// renderer.setPixelRatio( 1/2 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	// array of functions for the rendering loop
+	var onRenderFcts= [];
+
+	// init scene and camera
+	scene	= new THREE.Scene();
+	
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Initialize a basic camera
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// Create a camera
+	camera = new THREE.Camera();
+	scene.add(camera);
+
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		sourceType : 'webcam',
+
+		// to read from an image
+		// sourceType : 'image',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
+
+		// to read from a video
+		// sourceType : 'video',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',		
+	})
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	})
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
+	
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+		maxDetectionRate: 30,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
+
+	markerKanji = addMarkerKanji();
+	scene.add (markerKanji);
+	markerHiro = addMarkerHiro();
+	// scene.add (markerHiro); // hide at first
+	
+	
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
+
+	////////////////////////////////////////////////////////
+	// picker
+	window.addEventListener ('mousedown', onMouseDown, false);
+	raycaster = new THREE.Raycaster();
+	mouse = new THREE.Vector2();
+	pickables = [markerKanji];	
+
+
+}
+	
+function onMouseDown (event) {
+	event.preventDefault();
+  	mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  	mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  	
+  	//raycaster.ray.origin.setFromMatrixPosition( camera.matrixWorld );
+	raycaster.ray.origin.set (0,0,0)
+	raycaster.ray.direction.set( mouse.x, mouse.y, 0.5 ).unproject( camera ).sub( raycaster.ray.origin ).normalize();
+			
+  	var intersects = raycaster.intersectObjects(pickables, true);
+  	if (intersects.length > 0) {
+  		console.log ('toggle showHiro');
+ 	
+ 		showHiro = !showHiro;
+  			
+	}
+	if (showHiro) {
+		scene.add (markerHiro)
+	} else {
+		scene.remove (markerHiro)
+	}
+}
+
+	
+function addMarkerKanji () {
+	let markerRootKanji = new THREE.Group();
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootKanji, {
+		type : 'pattern',
+		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
+	})
+
+	// add a torus knot	
+
+	var geometry	= new THREE.PlaneGeometry(1,1);
+		
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('')
+	let texture = loader.load( 'https://i.imgur.com/J0RenHB.png' );
+	
+	let material = new THREE.MeshBasicMaterial( { 
+		map: texture,
+		transparent: true
+		 } );
+
+	let mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= geometry.parameters.height/2
+	mesh.position.z = 0.5;
+	
+	markerRootKanji.add (mesh);
+
+	/// add gridhelper
+	var gridXZ = new THREE.GridHelper(2,10);
+	markerRootKanji.add (gridXZ);
+	
+	return markerRootKanji;
+}
+
+function addMarkerHiro(){
+	let markerRoot = new THREE.Group()
+
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+	})
+
+	// add a torus knot	
+	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
+	var material	= new THREE.MeshNormalMaterial();
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= 0.5
+	
+	markerRoot.add (mesh);
+		
+	return markerRoot;
+}	
+
+
+function animate() {
+	requestAnimationFrame (animate);
+	
+	// Line 111:
+	if( arToolkitSource.ready === false )	return
+	arToolkitContext.update( arToolkitSource.domElement )
+
+	// Line 154:
+	// markerHiro rotation
+	if (showHiro) {
+		markerHiro.children[0].rotation.x += 0.1;
+	}
+	
+	// Line 215:
+	renderer.render (scene, camera);
+	stats.update();
+	
+}
+
+</script></body>

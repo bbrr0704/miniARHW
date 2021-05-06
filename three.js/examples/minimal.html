@@ -1,25 +1,16 @@
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <!-- three.js library -->
-<script src='../examples/vendor/three.js/build/three.js'></script>
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
 <script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
-<!-- jsartookit -->
-<script src="../vendor/jsartoolkit5/build/artoolkit.min.js"></script>
-<script src="../vendor/jsartoolkit5/js/artoolkit.api.js"></script>
-<!-- include threex.artoolkit -->
-<script src="../src/threex/threex-artoolkitsource.js"></script>
-<script src="../src/threex/threex-artoolkitcontext.js"></script>
-<script src="../src/threex/threex-artoolkitprofile.js"></script>
-<script src="../src/threex/threex-arbasecontrols.js"></script>
-<script src="../src/threex/threex-armarkercontrols.js"></script>
-<script src="../src/threex/threex-armarkercloak.js"></script>
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
 <script>THREEx.ArToolkitContext.baseURL = '../'</script>
 
-<body style='margin : 0px; overflow: hidden; font-family: Monospace; user-select: none;'><div style='position: absolute; top: 10px; width:100%; text-align: center;z-index:1';>
-	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - Marker Invisibility Cloak - Click to toggle the cloak.
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js mobile performance
 	<br/>
-	Code by <a href="https://twitter.com/snigelpaogat" target='_blank'>Fredrik Blomqvist</a> and
-	<a href='https://twitter.com/jerome_etienne' target='_blank'>@jerome_etienne</a>
+	Contact me any time at <a href='https://twitter.com/jerome_etienne' target='_blank'>@jerome_etienne</a>
 </div><script>
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
@@ -31,27 +22,18 @@
 		alpha: true
 	});
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
-	// renderer.setPixelRatio( 2 );
+	// renderer.setPixelRatio( 1/2 );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.domElement.style.position = 'absolute'
 	renderer.domElement.style.top = '0px'
 	renderer.domElement.style.left = '0px'
 	document.body.appendChild( renderer.domElement );
 
-	renderer.autoClear = false;
-
 	// array of functions for the rendering loop
 	var onRenderFcts= [];
 
 	// init scene and camera
 	var scene	= new THREE.Scene();
-
-	var ambient = new THREE.AmbientLight( 0x666666 );
-	scene.add( ambient );
-
-	var directionalLight = new THREE.DirectionalLight( 0x887766 );
-	directionalLight.position.set( -1, 1, 1 ).normalize();
-	scene.add( directionalLight );
 	
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
@@ -60,17 +42,6 @@
 	// Create a camera
 	var camera = new THREE.Camera();
 	scene.add(camera);
-	
-	var debugEnabled = false
-	
-	//////////////////////////////////////////////////////////////////////////////
-	//		Code Separator
-	//////////////////////////////////////////////////////////////////////////////
-
-	if( debugEnabled === true ){
-	        var orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, -100, +100);
-	        var orthoScene = new THREE.Scene();		
-	}
 
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
@@ -79,7 +50,7 @@
 	var arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
 		sourceType : 'webcam',
-		
+
 		// to read from an image
 		// sourceType : 'image',
 		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
@@ -104,19 +75,18 @@
 			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
 		}	
 	}
-
 	////////////////////////////////////////////////////////////////////////////////
 	//          initialize arToolkitContext
-	////////////////////////////////////////////////////////////////////////////////	
+	////////////////////////////////////////////////////////////////////////////////
+	
 
 	// create atToolkitContext
 	var arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
 		detectionMode: 'mono',
-		imageSmoothingEnabled: false,
 		maxDetectionRate: 30,
-		canvasWidth: 80*4,
-		canvasHeight: 60*4,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
 	})
 	// initialize it
 	arToolkitContext.init(function onCompleted(){
@@ -140,83 +110,27 @@
 	scene.add(markerRoot)
 	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
 		type : 'pattern',
-		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro',
-		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
 	})
-
-	//////////////////////////////////////////////////////////////////////////////////
-	//		build videoTexture
-	//////////////////////////////////////////////////////////////////////////////////
-	
-	// get videoTexture
-	if( arToolkitSource.domElement.nodeName === 'VIDEO' ){
-		var videoTexture = new THREE.VideoTexture(arToolkitSource.domElement)
-		// arToolkitSource.domElement.pause()
-	}else if( arToolkitSource.domElement.nodeName === 'IMG' ){
-		var videoTexture = new THREE.Texture(arToolkitSource.domElement)
-		videoTexture.needsUpdate = true		
-	}else console.assert(false)
-	// TODO to remove if webgl2 - better visual ?
-	videoTexture.minFilter =  THREE.NearestFilter
-
-
-	//////////////////////////////////////////////////////////////////////////////
-	//		add markerCloak
-	//////////////////////////////////////////////////////////////////////////////
-	var markerCloak =  new THREEx.ArMarkerCloak(videoTexture);
-	markerRoot.add(markerCloak.object3d)
-	
-	
-
-	onRenderFcts.push(function(){
-		markerCloak.update(markerRoot.matrix, camera.projectionMatrix)
+/*
+	// build a smoothedControls
+	var smoothedRoot = new THREE.Group()
+	scene.add(smoothedRoot)
+	var smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
+		lerpPosition: 0.4,
+		lerpQuaternion: 0.3,
+		lerpScale: 1,
 	})
-
-	if( debugEnabled === true ){
-		orthoScene.add(markerCloak.orthoMesh)
-		onRenderFcts.push(function(){
-			markerCloak.orthoMesh.visible = markerRoot.visible
-		})
-	}
-	
-	//////////////////////////////////////////////////////////////////////////////
-	//		opacity animation
-	//////////////////////////////////////////////////////////////////////////////
-	
-	// animation opacity
-	var targetOpacity = 1.0
 	onRenderFcts.push(function(delta){
-		var opacity = markerCloak.object3d.material.uniforms.opacity
-		var speed = delta * 3
-		if( opacity.value > targetOpacity ){
-			opacity.value -= speed
-			if( opacity.value < targetOpacity ){
-				opacity.value = targetOpacity
-			}
-		}
-
-		if( opacity.value < targetOpacity ){
-			opacity.value += speed
-			if( opacity.value > targetOpacity ){
-				opacity.value = targetOpacity
-			}
-		}
+		smoothedControls.update(markerRoot)
 	})
-
-	// toggleCloak on click/keypress
-	function toggleCloak(){
-		if( targetOpacity === 1.0 ){
-			targetOpacity = 0.0
-		}else{
-			targetOpacity = 1.0
-		}
-	}
-	document.body.addEventListener('click', toggleCloak)
-	document.body.addEventListener('keypress', toggleCloak)
-
 	//////////////////////////////////////////////////////////////////////////////////
 	//		add an object in the scene
 	//////////////////////////////////////////////////////////////////////////////////
+
+	var arWorldRoot = smoothedRoot
+*/
 
 	// add a torus knot	
 	var geometry	= new THREE.CubeGeometry(1,1,1);
@@ -227,35 +141,31 @@
 	}); 
 	var mesh	= new THREE.Mesh( geometry, material );
 	mesh.position.y	= geometry.parameters.height/2
-	markerRoot.add( mesh );
-	
+
+//	arWorldRoot.add( mesh );
+	markerRoot.add (mesh);
+		
 	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
 	var material	= new THREE.MeshNormalMaterial(); 
 	var mesh	= new THREE.Mesh( geometry, material );
 	mesh.position.y	= 0.5
-	markerRoot.add( mesh );
-	
-	onRenderFcts.push(function(delta){
-		mesh.rotation.x += Math.PI*delta
+
+//	arWorldRoot.add( mesh );
+	markerRoot.add (mesh);
+		
+	onRenderFcts.push(function(){
+		mesh.rotation.x += 0.1
 	})
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		render the whole thing on the page
 	//////////////////////////////////////////////////////////////////////////////////
 	var stats = new Stats();
-	// document.body.appendChild( stats.dom );
+	document.body.appendChild( stats.dom );
 	// render the scene
 	onRenderFcts.push(function(){
-		
-		renderer.clear();
-		
 		renderer.render( scene, camera );
-
-		if( debugEnabled === true ){
-        		renderer.render( orthoScene, orthoCamera );
-		}
-
-		// stats.update();
+		stats.update();
 	})
 
 	// run the rendering loop

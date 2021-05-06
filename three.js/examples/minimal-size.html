@@ -10,27 +10,14 @@
 <body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
 	<a href="https://github.com/jeromeetienne/AR.js/" target="_blank">AR.js</a> - three.js mobile performance
 	<br/>
-	init-animate format<br>
-	smoothed control
+	Contact me any time at <a href='https://twitter.com/jerome_etienne' target='_blank'>@jerome_etienne</a>
 </div><script>
-var renderer, scene, camera, stats;
-var arToolkitSource, arToolkitContext;
-var smoothedControls, markerRoot, smoothedRoot;
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Init
+	//////////////////////////////////////////////////////////////////////////////////
 
-init();
-animate();
-
-function onResize(){
-	arToolkitSource.onResize()	
-	arToolkitSource.copySizeTo(renderer.domElement)	
-	if( arToolkitContext.arController !== null ){
-		arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
-	}	
-}
-
-function init() {
-
-	renderer	= new THREE.WebGLRenderer({
+	// init renderer
+	var renderer	= new THREE.WebGLRenderer({
 		// antialias	: true,
 		alpha: true
 	});
@@ -42,22 +29,25 @@ function init() {
 	renderer.domElement.style.left = '0px'
 	document.body.appendChild( renderer.domElement );
 
+	// array of functions for the rendering loop
+	var onRenderFcts= [];
+
 	// init scene and camera
-	scene	= new THREE.Scene();
+	var scene	= new THREE.Scene();
 	
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
 	//////////////////////////////////////////////////////////////////////////////////
 
 	// Create a camera
-	camera = new THREE.Camera();
+	var camera = new THREE.Camera();
 	scene.add(camera);
 
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
 	////////////////////////////////////////////////////////////////////////////////
 
-	arToolkitSource = new THREEx.ArToolkitSource({
+	var arToolkitSource = new THREEx.ArToolkitSource({
 		// to read from the webcam 
 		sourceType : 'webcam',
 
@@ -78,13 +68,20 @@ function init() {
 	window.addEventListener('resize', function(){
 		onResize()
 	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
 	////////////////////////////////////////////////////////////////////////////////
 	//          initialize arToolkitContext
 	////////////////////////////////////////////////////////////////////////////////
 	
 
 	// create atToolkitContext
-	arToolkitContext = new THREEx.ArToolkitContext({
+	var arToolkitContext = new THREEx.ArToolkitContext({
 		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
 		detectionMode: 'mono',
 		maxDetectionRate: 30,
@@ -96,69 +93,90 @@ function init() {
 		// copy projection matrix to camera
 		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
 	})
+
+	// update artoolkit on every frame
+	onRenderFcts.push(function(){
+		if( arToolkitSource.ready === false )	return
+
+		arToolkitContext.update( arToolkitSource.domElement )
+	})
+	
 	
 	////////////////////////////////////////////////////////////////////////////////
 	//          Create a ArMarkerControls
 	////////////////////////////////////////////////////////////////////////////////
 	
-	markerRoot = new THREE.Group
+	var markerRoot = new THREE.Group
 	scene.add(markerRoot)
 	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
 		type : 'pattern',
 		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
 		// patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.kanji'
 	})
-
+/*
 	// build a smoothedControls
-	smoothedRoot = new THREE.Group()
+	var smoothedRoot = new THREE.Group()
 	scene.add(smoothedRoot)
-	
-	smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
+	var smoothedControls = new THREEx.ArSmoothedControls(smoothedRoot, {
 		lerpPosition: 0.4,
 		lerpQuaternion: 0.3,
 		lerpScale: 1,
 	})
-
+	onRenderFcts.push(function(delta){
+		smoothedControls.update(markerRoot)
+	})
 	//////////////////////////////////////////////////////////////////////////////////
 	//		add an object in the scene
 	//////////////////////////////////////////////////////////////////////////////////
 
-	let arWorldRoot = smoothedRoot
-	
-	// add a torus knot	
-	let geometry	= new THREE.CubeGeometry(1,1,1);
-	let material	= new THREE.MeshNormalMaterial({
+	var arWorldRoot = smoothedRoot
+*/
+
+	// add a plane	
+	var markerWidth = 9; // will be ONE in three.js world
+	var geometry = new THREE.PlaneGeometry (30.2/markerWidth, 17.9/markerWidth);
+	var material	= new THREE.MeshNormalMaterial({
 		transparent : true,
 		opacity: 0.5,
 		side: THREE.DoubleSide
 	}); 
-	let mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= geometry.parameters.height/2
-	arWorldRoot.add( mesh );
-	
-	geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
-	material	= new THREE.MeshNormalMaterial(); 
-	mesh	= new THREE.Mesh( geometry, material );
-	mesh.position.y	= 0.5
-	arWorldRoot.add( mesh );
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.rotation.x = -Math.PI/2;
+	mesh.position.x = -5.1/markerWidth;
+	mesh.position.z = -0.35/markerWidth;
 
-	stats = new Stats();
+	
+//	arWorldRoot.add( mesh );
+	markerRoot.add (mesh);
+		
+		
+	onRenderFcts.push(function(){
+//		mesh.rotation.x += 0.1
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		render the whole thing on the page
+	//////////////////////////////////////////////////////////////////////////////////
+	var stats = new Stats();
 	document.body.appendChild( stats.dom );
-}
+	// render the scene
+	onRenderFcts.push(function(){
+		renderer.render( scene, camera );
+		stats.update();
+	})
 
-function animate() {
-
-	requestAnimationFrame (animate);
-	renderer.render (scene, camera);
-	stats.update();
-	
-	if( arToolkitSource.ready === false )	return
-
-	arToolkitContext.update( arToolkitSource.domElement )
-
-	smoothedControls.update (markerRoot)
-	smoothedRoot.children[1].rotation.x += 0.1;
-	
-}
-	
+	// run the rendering loop
+	var lastTimeMsec= null
+	requestAnimationFrame(function animate(nowMsec){
+		// keep looping
+		requestAnimationFrame( animate );
+		// measure time
+		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60
+		var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
+		lastTimeMsec	= nowMsec
+		// call each update function
+		onRenderFcts.forEach(function(onRenderFct){
+			onRenderFct(deltaMsec/1000, nowMsec/1000)
+		})
+	})
 </script></body>

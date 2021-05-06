@@ -43,8 +43,10 @@ function init() {
 		alpha: true
 	});
 	
-	renderer.shadowMap.type = THREE.PCFSoftShadowMap
-	renderer.shadowMap.enabled = true;
+// renderer.shadowMap.type = THREE.BasicShadowMap
+// renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
+renderer.shadowMap.enabled = true;
 
 	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
 	// renderer.setPixelRatio( 1/2 );
@@ -55,6 +57,7 @@ function init() {
 	renderer.domElement.style.left = '0px'
 	document.body.appendChild( renderer.domElement );
 
+
 	// init scene and camera
 	scene	= new THREE.Scene();
 
@@ -62,7 +65,8 @@ function init() {
 	scene.add( ambient );
 
 	var directionalLight = new THREE.DirectionalLight( 'white' );
-	directionalLight.position.set( 1, 2, 0.3 ).setLength(2)
+	//directionalLight.position.set( 0, 2, 0 ).setLength(2)
+	directionalLight.position.set( 0, 0, -1 ).setLength(2)
 
 	directionalLight.shadow.mapSize.set(128,128)
 	directionalLight.shadow.camera.bottom = -0.6
@@ -70,8 +74,7 @@ function init() {
 	directionalLight.shadow.camera.right = 0.6
 	directionalLight.shadow.camera.left = -0.6
 	directionalLight.castShadow = true;
-	
-	//scene.add(new THREE.CameraHelper( directionalLight.shadow.camera ))
+	// scene.add(new THREE.CameraHelper( directionalLight.shadow.camera ))
 	scene.add( directionalLight );
 
 	//////////////////////////////////////////////////////////////////////////////////
@@ -147,33 +150,36 @@ function init() {
 	//////////////////////////////////////////////////////////////////////////////////
 
 	markerRoot = new THREE.Object3D();
-	scene.add(markerRoot);
+	scene.add(markerRoot)
 	
-	// make it slightly larger for better view
-	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16); 
-	var material	= new THREE.MeshLambertMaterial();
-	var mesh	= new THREE.Mesh( geometry, material );
-	mesh.castShadow = true;
-	mesh.receiveShadow = true;
-	mesh.position.y	= 0.7
-	markerRoot.add( mesh );
+		var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16); // make it slightly larger for better view
+		//var material	= new THREE.MeshNormalMaterial();
+		var material	= new THREE.MeshLambertMaterial();
+		var mesh	= new THREE.Mesh( geometry, material );
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.position.y	= 0.7
+		markerRoot.add( mesh );
 		
-	// point the directionalLight to the marker
-	directionalLight.target = mesh
+		
+		// point the directionalLight to the marker
+		directionalLight.target = mesh
 
-	// add a transparent ground-plane shadow-receiver
-	var material = new THREE.ShadowMaterial();
-	//var material = new THREE.MeshLambertMaterial({color:0xffff00, side:THREE.DoubleSide});
+		// add a transparent ground-plane shadow-receiver
+		//var material = new THREE.ShadowMaterial();
+		var material = new THREE.MeshLambertMaterial({color:0xffff00, side:THREE.DoubleSide});
 
-	//material.opacity = 0.7; //! bug in threejs. can't set in constructor
+		material.opacity = 0.7; //! bug in threejs. can't set in constructor
 
-	var geometry = new THREE.PlaneGeometry(3, 3) // should be large enough
-	var planeMesh = new THREE.Mesh( geometry, material);
-	planeMesh.receiveShadow = true;
-	planeMesh.depthWrite = false;
-	planeMesh.rotation.x = -Math.PI/2
-	markerRoot.add(planeMesh);
-	
+		var geometry = new THREE.PlaneGeometry(2, 2)
+		var planeMesh = new THREE.Mesh( geometry, material);
+		planeMesh.receiveShadow = true;
+		planeMesh.depthWrite = false;
+		planeMesh.rotation.x = -Math.PI/2
+		markerRoot.add(planeMesh);
+		
+	markerRoot.rotation.x = -Math.PI/2 // rotated world
+
     stats = new Stats();
 	document.body.appendChild( stats.dom );
 }
@@ -185,14 +191,15 @@ function animate() {
 	renderer.render (scene, camera)
 	stats.update();
 
-	if( arToolkitSource.ready === false )	return
+		if( arToolkitSource.ready === false )	return
 
-	arToolkitContext.update( arToolkitSource.domElement )
-	
-	// update scene.visible if the marker is seen ???
-	scene.visible = camera.visible
+		arToolkitContext.update( arToolkitSource.domElement )
+		
+		// update scene.visible if the marker is seen
+		scene.visible = camera.visible
 		
 	markerRoot.children[0].rotation.x += 0.04;
+	
 	
 }
 </script></body>
