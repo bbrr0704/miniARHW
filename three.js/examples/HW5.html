@@ -313,8 +313,10 @@ function onDocumentMouseDown(event) {
 	scene.remove (scene.getObjectByName('projectile'));
   scene.add(parabola);
 	parabola.quaternion.copy (q2)
-		
-	}
+	
+	
+		launch = true;
+}
 
 function computeInitPosVel() {
   let barrel = cannon.children[1];
