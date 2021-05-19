@@ -143,22 +143,12 @@ function addMarkerBomb () {
 		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
 	})
 	
-	let loader = new THREE.TextureLoader();
-	loader.setCrossOrigin('')
-	let texture = loader.load( 'https://i.imgur.com/Y0280bs.png' );
-	
-	let material = new THREE.MeshBasicMaterial( { 
-		map: texture,
-		//color: 0xffff00,
-		side: THREE.DoubleSide
-		} );
 	let geometry	= new THREE.PlaneGeometry(1,1);
-	let mesh	= new THREE.Mesh( geometry, material );
-	//mesh.position.y	= geometry.parameters.height/2 // mesh centered at root
-	aimGroup = new THREE.Object3D();
-	aimGroup.add (mesh);
-	let origin = new THREE.Mesh (new THREE.OctahedronGeometry(0.1), new THREE.MeshNormalMaterial());
-	markerRootHiro.add (aimGroup, origin);
+	
+	
+	
+
+	markerRootHiro.add (geometry);
 	
 	/// add gridhelper
 
