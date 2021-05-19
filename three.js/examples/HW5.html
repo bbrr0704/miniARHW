@@ -212,8 +212,7 @@ function animate() {
 	if( arToolkitSource.ready === false )	return
 	arToolkitContext.update( arToolkitSource.domElement )
 	
-
-	toKanji = markerHiro.worldToLocal (markerBomb.localToWorld (new THREE.Vector3(0,0,0)));
+	/*toKanji = markerHiro.worldToLocal (markerBomb.localToWorld (new THREE.Vector3(0,0,0)));
 
 	target.copy(toKanji);
     targetBall.position.copy(target);
@@ -226,9 +225,9 @@ function animate() {
 	parabola.name = 'projectile';
 	scene.remove (scene.getObjectByName('projectile'));
   scene.add(parabola);
-	parabola.quaternion.copy (q2)
+	parabola.quaternion.copy (q2);*/
 	
-	
+
 	
 
 	if(launch && safety)
