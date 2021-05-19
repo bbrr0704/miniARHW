@@ -145,13 +145,10 @@ function addMarkerBomb () {
 		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
 	})
 	
-	var geometry	= new THREE.SphereGeometry(0.1,20,20);
-	var material	= new THREE.MeshNormalMaterial();
-	box2	= new THREE.Mesh( geometry, material );
-	box2.position.y	= 0.1;
+	var	cylinder = new THREE.CylinderGeometry( 0.15, 0.15, 20*pro, 32 );
 	
 	
-	markerRootBomb.add (box2);
+	markerRootBomb.add (cylinder);
 
 	
 	return markerRootBomb;
@@ -226,7 +223,7 @@ function animate() {
 		  
 	
       
-      return;
+		return;
 		}
 		let dt = clock.getDelta();
 
