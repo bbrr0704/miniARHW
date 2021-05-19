@@ -21,7 +21,7 @@ Minimal Version
 var renderer, scene, camera;
 var stats;
 var arToolKitSource, arToolKitContext;
-var markerHiro;
+var markerHiro , markerBomb;
 
 var cannon;
 var counter, N, angle;
@@ -113,7 +113,10 @@ function init() {
 	
 
 	markerHiro = addMarkerHiro();
-	scene.add (markerHiro); 
+	scene.add (markerHiro);
+	
+	markerBomb = addMarkerBomb();
+	scene.add (markerBomb);
 	
 	document.addEventListener('pointerdown', onDocumentMouseDown, false);
 	target = new THREE.Vector3(70*pro, 0, 0);
@@ -133,8 +136,36 @@ function init() {
   
 	clock = new THREE.Clock();
 }
+function addMarkerBomb () {
+	let markerRootBomb = new THREE.Group();
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootHiro, {
+		type : 'pattern',
+		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
+	})
+	
+	let loader = new THREE.TextureLoader();
+	loader.setCrossOrigin('')
+	let texture = loader.load( 'https://i.imgur.com/Y0280bs.png' );
+	
+	let material = new THREE.MeshBasicMaterial( { 
+		map: texture,
+		//color: 0xffff00,
+		side: THREE.DoubleSide
+		} );
+	let geometry	= new THREE.PlaneGeometry(1,1);
+	let mesh	= new THREE.Mesh( geometry, material );
+	//mesh.position.y	= geometry.parameters.height/2 // mesh centered at root
+	aimGroup = new THREE.Object3D();
+	aimGroup.add (mesh);
+	let origin = new THREE.Mesh (new THREE.OctahedronGeometry(0.1), new THREE.MeshNormalMaterial());
+	markerRootHiro.add (aimGroup, origin);
+	
+	/// add gridhelper
 
 	
+	return markerRootBomb;
+
+}	
 function addMarkerHiro(){
 	let markerRoot = new THREE.Group()
 
