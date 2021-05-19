@@ -143,14 +143,14 @@ function addMarkerBomb () {
 		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/bomb.patt'
 	})
 	
-	let geometry	= new THREE.PlaneGeometry(1,1);
-	
-	
-	
-
-	markerRootHiro.add (geometry);
+	var geometry	= new THREE.SphereGeometry(0.1,20,20);
+	var material	= new THREE.MeshNormalMaterial();
+	box2	= new THREE.Mesh( geometry, material );
+	box2.position.y	= 0.1;
 	
 	/// add gridhelper
+	
+	markerRootBomb.add (box2);
 
 	
 	return markerRootBomb;
