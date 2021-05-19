@@ -30,6 +30,7 @@ var target, targetBall;
 var v, g;
 var theta;
 var q1,q2;
+var pro = 0.01;
 
 ////////////////////////////////////////////
 
@@ -115,7 +116,7 @@ function init() {
 	scene.add (markerHiro); 
 	
 	document.addEventListener('pointerdown', onDocumentMouseDown, false);
-	target = new THREE.Vector3(70, 0, 0);
+	target = new THREE.Vector3(70*pro, 0, 0);
 	targetBall.position.copy(target);
 	
 	//////////////////////////
@@ -172,7 +173,7 @@ function addMarkerHiro(){
   markerRoot.add(targetBall);
   
   
-  ball = new THREE.Mesh (new THREE.SphereGeometry(2,8,8), new THREE.MeshPhongMaterial());
+  ball = new THREE.Mesh (new THREE.SphereGeometry(2*pro,8,8), new THREE.MeshPhongMaterial());
   markerRoot.add(ball);						//4
 
  
@@ -221,11 +222,11 @@ function animate() {
 function makeCannon() {
   let cannon = new THREE.Group();
   let body = new THREE.Mesh(new THREE.SphereGeometry(
-    10, 20, 20, Math.PI + Math.PI * 0.1, Math.PI * 1.8, 0, Math.PI / 2), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
+    10*pro, 20, 20, Math.PI + Math.PI * 0.1, Math.PI * 1.8, 0, Math.PI / 2), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
   let barrelPart = new THREE.Group();
-  let barrel = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 20), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
+  let barrel = new THREE.Mesh(new THREE.CylinderGeometry(2*pro, 2*pro, 20), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
   barrelPart.add(barrel);
-  barrel.position.y = 10;
+  barrel.position.y = 10*pro;
   barrelPart.rotation.z = -Math.PI / 4;
 
   cannon.add(body, barrelPart);
