@@ -304,6 +304,8 @@ function onDocumentMouseDown(event) {
 
 	setTimeout (spriteAnimate, 0);
 	
+	markerBomb.remove(box1);
+	
 	toKanji = markerHiro.worldToLocal (markerBomb.localToWorld(new THREE.Vector3(0,0,0)));
   
     target.copy(toKanji);
