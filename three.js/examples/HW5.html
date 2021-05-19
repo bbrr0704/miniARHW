@@ -124,8 +124,8 @@ function init() {
 	q2 = new THREE.Quaternion();
 
 	/////////////////
-	v = 30;
-	g = 10;
+	v = 30*pro;
+	g = 10*pro;
   
   
 	////////////////
@@ -222,9 +222,9 @@ function animate() {
 function makeCannon() {
   let cannon = new THREE.Group();
   let body = new THREE.Mesh(new THREE.SphereGeometry(
-    10*pro, 20, 20, Math.PI + Math.PI * 0.1, Math.PI * 1.8, 0, Math.PI / 2), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
+    10*pro, 20, 20, Math.PI + Math.PI * 0.1, Math.PI * 1.8, 0, Math.PI / 2), new THREE.MeshNormalMaterial({transparent:true,opacity:1}));
   let barrelPart = new THREE.Group();
-  let barrel = new THREE.Mesh(new THREE.CylinderGeometry(2*pro, 2*pro, 20), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
+  let barrel = new THREE.Mesh(new THREE.CylinderGeometry(2*pro, 2*pro, 20*pro), new THREE.MeshNormalMaterial({transparent:true,opacity:1}));
   barrelPart.add(barrel);
   barrel.position.y = 10*pro;
   barrelPart.rotation.z = -Math.PI / 4;
