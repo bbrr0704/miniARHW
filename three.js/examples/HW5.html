@@ -3,6 +3,7 @@
 
 <!-- three.js library -->
 <script src='../examples/vendor/three.js/build/three.min.js'></script>
+<script src="../examples/vendor/three.js/examples/js/libs/stats.min.js"></script>
 
 <!-- ar.js -->
 <script src="../build/ar.js"></script>
@@ -15,12 +16,10 @@
 
 // global variables
 var renderer, scene, camera;
+var stats;
 var arToolKitSource, arToolKitContext;
 
 var markerHiro;
-
-var _iOSDevice;
-
 
 ////////////////////
 
@@ -43,11 +42,6 @@ init();
 animate();
 
 function init() {
-	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
-	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
-
-	console.log ('iOS: ' + _iOSDevice)
-
 
 	// init renderer
 	renderer	= new THREE.WebGLRenderer({
@@ -180,7 +174,8 @@ function addMarkerHiro () {
 
 
 function animate() {
-  requestAnimationFrame (animate);
+	requestAnimationFrame (animate);
+	stats.update();
 	
   if( arToolkitSource.ready === false )	return
   arToolkitContext.update( arToolkitSource.domElement )
