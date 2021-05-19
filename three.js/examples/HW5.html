@@ -259,7 +259,7 @@ function computeProjectile() {
 	let L = target.length();
   theta = Math.asin(L*g/v/v)/2;
   //console.log (L*g/v/v)
-  if (L*g/v/v > 1) {
+  if (L*g/v/v > 1*pro) {
   	$('#msg').text ('too far to hit');
 	
   } else {
