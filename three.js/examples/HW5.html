@@ -15,6 +15,9 @@
 <p id='msg'></p>
 </div>
 
+<script src="explode.js"></script>
+
+
 <script>
 
 // global variables
@@ -119,6 +122,7 @@ function init() {
 	
 	markerBomb = addMarkerBomb();
 	scene.add (markerBomb);
+	initSprite(markerBomb);
 	
 	document.addEventListener('pointerdown', onDocumentMouseDown, false);
 	target = new THREE.Vector3(70*pro, 0, 0);
@@ -295,7 +299,8 @@ function makeParabola (a, b, c) {
 }
 function onDocumentMouseDown(event) {
 
-
+	setTimeout (spriteAnimate, 0);
+	
 	toKanji = markerHiro.worldToLocal (markerBomb.localToWorld(new THREE.Vector3(0,0,0)));
   
     target.copy(toKanji);
