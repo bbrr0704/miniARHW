@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+<!-- three.js library -->
+<script src='../examples/vendor/three.js/build/three.min.js'></script>
+
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
+
+
+
+<script src="explode.js"></script>
+<script>
+
+// global variables
+var renderer, scene, camera;
+var arToolKitSource, arToolKitContext;
+
+var markerHiro;
+
+var _iOSDevice;
+
+
+////////////////////
+
+var cannon;
+var counter, N, angle;
+var pickables = [], mouse, raycaster;
+var target, targetBall;
+var v, g;
+var theta;
+var q1,q2;
+
+////////////////////////////////////////////
+
+var launch = false , safety = true;
+var ball;
+var pos, vel, force, ori;
+var clock;
+
+init();
+animate();
+
+function init() {
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	let _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
+
+	console.log ('iOS: ' + _iOSDevice)
+
+
+	// init renderer
+	renderer	= new THREE.WebGLRenderer({
+		// antialias	: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	// renderer.setPixelRatio( 1/2 );
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
+
+	
+	// init scene and camera
+	scene	= new THREE.Scene();
+	
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Initialize a basic camera
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// Create a camera
+	camera = new THREE.Camera();
+	scene.add(camera);
+
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
+
+	arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam 
+		sourceType : 'webcam',
+
+		// to read from an image
+		// sourceType : 'image',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/images/img.jpg',		
+
+		// to read from a video
+		// sourceType : 'video',
+		// sourceUrl : THREEx.ArToolkitContext.baseURL + '../data/videos/headtracking.mp4',		
+	})
+
+	arToolkitSource.init(function onReady(){
+		onResize()
+	})
+	
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+	})
+	function onResize(){
+		arToolkitSource.onResize()	
+		arToolkitSource.copySizeTo(renderer.domElement)	
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copySizeTo(arToolkitContext.arController.canvas)	
+		}	
+	}
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
+	
+	arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+		maxDetectionRate: 30,
+		canvasWidth: 80*3,
+		canvasHeight: 60*3,
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
+	
+	target = new THREE.Vector3(70, 0, 0);
+	targetBall.position.copy(target);
+	
+	
+	q1 = new THREE.Quaternion(); // null rotation
+	q2 = new THREE.Quaternion();
+
+	/////////////////
+	v = 30;
+	g = 10;
+  
+  
+	////////////////
+			
+  
+	clock = new THREE.Clock();
+	
+	
+	///////////////////////////////////////////////////
+	markerHiro = addMarkerHiro();
+	scene.add (markerHiro); 
+	
+	
+		
+}
+
+function addMarkerHiro () {
+	let markerRootHiro = new THREE.Group();
+	var artoolkitMarker = new THREEx.ArMarkerControls(arToolkitContext, markerRootHiro, {
+		type : 'pattern',
+		 patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+	})
+	
+	raycaster = new THREE.Raycaster();    //children[0]
+	markerRootHiro.add(raycaster);
+  ///////////////////////////////////////////////////////////
+
+  cannon = makeCannon();				//children[1]
+  markerRootHiro.add(cannon);
+
+  targetBall = new THREE.Mesh(new THREE.OctahedronGeometry(3), new THREE.MeshBasicMaterial({
+    color: 'cyan',
+    wireframe: true
+  }));									//children[2]
+  markerRootHiro.add(targetBall);
+  
+  
+  ball = new THREE.Mesh (new THREE.SphereGeometry(2,8,8), new THREE.MeshPhongMaterial());
+  markerRootHiro.add(ball);				//children[3]
+	
+	
+	return markerRootHiro;
+}
+
+
+
+function animate() {
+  requestAnimationFrame (animate);
+	
+  if( arToolkitSource.ready === false )	return
+  arToolkitContext.update( arToolkitSource.domElement )
+  
+  
+  if(launch && safety)
+  {
+		if (pos === undefined) {
+  		computeInitPosVel();
+  		return;
+ 	 	}
+ 	 	if (pos.y < 0)
+		{
+		  safety = false;
+		  pos = undefined;
+		  
+			ball.position.copy (ori); 
+      
+      return;
+		}
+		let dt = clock.getDelta();
+
+		// Euler's method
+  	vel.add (force.clone().multiplyScalar(dt));
+ 		pos.add (vel.clone().multiplyScalar(dt));
+  	ball.position.copy (pos);
+  
+  }
+
+  renderer.render (scene, camera);
+  
+  
+		
+}
+
+
+function makeCannon() {
+  let cannon = new THREE.Group();
+  let body = new THREE.Mesh(new THREE.SphereGeometry(
+    10, 20, 20, Math.PI + Math.PI * 0.1, Math.PI * 1.8, 0, Math.PI / 2), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
+  let barrelPart = new THREE.Group();
+  let barrel = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 20), new THREE.MeshNormalMaterial({transparent:true,opacity:0.3}));
+  barrelPart.add(barrel);
+  barrel.position.y = 10;
+  barrelPart.rotation.z = -Math.PI / 4;
+
+  cannon.add(body, barrelPart);
+  return cannon;
+}
+
+function computeProjectile() {
+	let L = target.length();
+  theta = Math.asin(L*g/v/v)/2;
+  //console.log (L*g/v/v)
+  if (L*g/v/v > 1) {
+  	$('#msg').text ('too far to hit');
+    launch = false;
+  } else {
+  	$('#msg').text ('reachable')
+    launch = true;
+  }
+  cannon.children[1].rotation.z = -(Math.PI/2 - theta);
+}
+function makeProjectile () {
+	let cTheta = Math.cos(theta);
+  let sTheta = Math.sin(theta);
+  let a = -g/2/v/v/cTheta/cTheta;
+  let b = v*v/g*cTheta*sTheta;
+  let c = v*v/2/g*sTheta*sTheta;
+  return makeParabola (a, b, c);
+}
+
+function makeParabola (a, b, c) {
+	let xRange = Math.sqrt(-a*c)*2/a;
+  const N = 20;
+  let dx = xRange/20;
+  
+  let points = [];
+  let x0 = b - xRange/2;
+  for (let i = 0; i <= N; i++) {
+  	xi = x0 + i*dx;
+    yi = a*(xi-b)*(xi-b) + c;
+    points.push (new THREE.Vector3(xi,yi,0));
+  }
+  
+  let geometry = new THREE.BufferGeometry().setFromPoints(points);
+  let parabola = new THREE.Line (geometry, new THREE.LineDashedMaterial({color:'cyan'}));
+  parabola.computeLineDistances(); // required for LineDashedMaterial
+  return parabola;
+  
+}
+function onDocumentMouseDown(event) {
+
+	event.preventDefault();
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  // find intersections
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(pickables);
+  if (intersects.length > 0) {
+    target.copy(intersects[0].point);
+    targetBall.position.copy(target);
+
+		q2.setFromUnitVectors(new THREE.Vector3(1, 0, 0), target.clone().normalize());  // compute new oriention
+	cannon.quaternion.copy (q2);
+    
+  computeProjectile();
+  let parabola = makeProjectile();
+	parabola.name = 'projectile';
+	scene.remove (scene.getObjectByName('projectile'));
+  scene.add(parabola);
+	parabola.quaternion.copy (q2)
+		
+	}
+
+}
+
+function computeInitPosVel() {
+  let barrel = cannon.children[1];
+  const SPEED = 30;
+	vel = barrel.localToWorld (new THREE.Vector3(0,20,0)).sub (
+  barrel.localToWorld (new THREE.Vector3(0,0,0))).setLength (SPEED);
+	force = new THREE.Vector3(0,-10,0);
+	ori = new THREE.Vector3(0,0,0);
+  pos = new THREE.Vector3(0,0.1,0);
+  
+  //pos = barrel.localToWorld (new THREE.Vector3(0,22,0));
+}
+
+</script>
+</body>
