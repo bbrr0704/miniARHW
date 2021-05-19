@@ -31,8 +31,6 @@ var v, g;
 var theta;
 var q1,q2;
 var pro = 0.015;
-var toKanji;
-
 
 ////////////////////////////////////////////
 
@@ -213,24 +211,6 @@ function animate() {
 	arToolkitContext.update( arToolkitSource.domElement )
 	
 
-	toKanji = markerHiro.worldToLocal (markerBomb.localToWorld (new THREE.Vector3(0,0,0)));
-
-	target.copy(toKanji);
-    targetBall.position.copy(target);
-
-		q2.setFromUnitVectors(new THREE.Vector3(1, 0, 0), target.clone().normalize());  // compute new oriention
-	cannon.quaternion.copy (q2);
-    
-  computeProjectile();
-  let parabola = makeProjectile();
-	parabola.name = 'projectile';
-	scene.remove (scene.getObjectByName('projectile'));
-  scene.add(parabola);
-	parabola.quaternion.copy (q2)
-	
-	
-	
-
 	if(launch && safety)
   {
 		if (pos === undefined) {
@@ -316,13 +296,28 @@ function makeParabola (a, b, c) {
 }
 function onDocumentMouseDown(event) {
 
-/*	event.preventDefault();
+	event.preventDefault();
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   // find intersections
-  raycaster.setFromCamera(mouse, camera);*/
-  
+  raycaster.setFromCamera(mouse, camera);
+  var intersects = raycaster.intersectObjects(pickables);
+  if (intersects.length > 0) {
+    target.copy(intersects[0].point);
+    targetBall.position.copy(target);
+
+		q2.setFromUnitVectors(new THREE.Vector3(1, 0, 0), target.clone().normalize());  // compute new oriention
+	cannon.quaternion.copy (q2);
+    
+  computeProjectile();
+  let parabola = makeProjectile();
+	parabola.name = 'projectile';
+	scene.remove (scene.getObjectByName('projectile'));
+  scene.add(parabola);
+	parabola.quaternion.copy (q2)
+		
+	}
 
 }
 
