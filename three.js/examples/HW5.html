@@ -319,11 +319,11 @@ function onDocumentMouseDown(event) {
 function computeInitPosVel() {
   let barrel = cannon.children[1];
   const SPEED = 30*pro;
-	vel = barrel.localToWorld (new THREE.Vector3(0,20,0)).sub (
+	vel = barrel.localToWorld (new THREE.Vector3(0,20*pro,0)).sub (
   barrel.localToWorld (new THREE.Vector3(0,0,0))).setLength (SPEED);
-	force = new THREE.Vector3(0,-10,0);
+	force = new THREE.Vector3(0,-10*pro,0);
 	ori = new THREE.Vector3(0,0,0);
-  pos = new THREE.Vector3(0,0.1,0);
+  pos = new THREE.Vector3(0,0.1*pro,0);
   
   //pos = barrel.localToWorld (new THREE.Vector3(0,22,0));
 }
